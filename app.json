@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "M2M_mobile_frontend",
-    "slug": "M2M_mobile_frontend",
+    "name": "micro2move",
+    "slug": "micro2move",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "m2mmobilefrontend",
+    "scheme": "micro2move",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

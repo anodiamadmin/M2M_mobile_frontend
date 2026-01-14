@@ -1,4 +1,4 @@
-import Label from "@components/Label"; // Ensure path matches your file structure
+import Label from "@components/Label";
 import { Colors } from "@theme/colors";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
@@ -11,7 +11,7 @@ export default function SplashScreen() {
   const onImageLoaded = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 1000, 
+      duration: 800, 
       useNativeDriver: true,
     }).start();
 
@@ -25,15 +25,12 @@ export default function SplashScreen() {
       <StatusBar barStyle="light-content" />
 
       <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
-        
-        {/* TOP SECTION: Primary Style (Comfortaa) - Default */}
         <View style={styles.topSection}>
           <Label size={18} color={Colors.white} style={{ letterSpacing: 0.5 }}>
             Making Sydney E-bike Friendly
           </Label>
         </View>
 
-        {/* CENTER LOGO */}
         <View style={styles.logoContainer}>
           <Image 
             source={require("../assets/images/SplashLogo.png")} 
@@ -43,7 +40,6 @@ export default function SplashScreen() {
           />
         </View>
 
-        {/* FOOTER SECTION: Secondary Style (Lato) - Added 'secondary' prop */}
         <View style={styles.footerContainer}>
           <Label style={{ textAlign: 'center' }}>
             <Label size={24} bold secondary color={Colors.secondary}>Affordable</Label>

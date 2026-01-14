@@ -1,5 +1,7 @@
-import { View, Text, TextInput } from "react-native";
-import { Fonts } from "@theme/fonts";
+import { StyleSheet, TextInput, View } from "react-native";
+import { Colors } from "../theme/colors";
+import { Fonts } from "../theme/fonts";
+import Label from "./Label";
 
 export default function TextField({
   label,
@@ -9,19 +11,23 @@ export default function TextField({
   secureTextEntry = false,
   error,
   testID,
+  style,
+  inputStyle,
+  ...props
 }) {
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={[styles.container, style]}>
+      
       {label && (
-        <Text
-          style={{
-            fontFamily: Fonts.secondaryBold,
-            fontSize: 12,
-            marginBottom: 6,
-          }}
+        <Label 
+          secondary 
+          bold 
+          size={14} 
+          color={Colors.primary} 
+          style={styles.label}
         >
           {label}
-        </Text>
+        </Label>
       )}
 
       <TextInput
@@ -29,28 +35,48 @@ export default function TextField({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
+        placeholderTextColor="#999"
         secureTextEntry={secureTextEntry}
-        style={{
-          borderWidth: 1,
-          borderColor: error ? "red" : "#ccc",
-          borderRadius: 6,
-          padding: 12,
-          fontFamily: Fonts.secondary,
-        }}
+        style={[
+          styles.input,
+          error && { borderColor: "red", borderWidth: 1 },
+          inputStyle 
+        ]}
+        {...props}
       />
 
+      {/* 3. Error Message */}
       {error && (
-        <Text
-          style={{
-            color: "red",
-            fontSize: 12,
-            marginTop: 4,
-            fontFamily: Fonts.secondary,
-          }}
+        <Label 
+          secondary 
+          size={12} 
+          style={{ color: "red", marginTop: 4, marginLeft: 10 }}
         >
           {error}
-        </Text>
+        </Label>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 20,
+    width: "100%",
+  },
+  label: {
+    marginBottom: 8,
+    marginLeft: 10,
+  },
+  input: {
+    height: 50,
+    backgroundColor: "#E6E6FA",
+    borderRadius: 25, 
+    paddingHorizontal: 20,
+    fontSize: 16,
+    fontFamily: Fonts.secondary, 
+    color: Colors.black,
+    borderWidth: 1,
+    borderColor: "transparent", 
+  },
+});

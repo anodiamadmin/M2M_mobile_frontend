@@ -1,6 +1,8 @@
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
 import {
+  Alert // 1. Import Alert
+  ,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -9,13 +11,15 @@ import {
   TouchableWithoutFeedback,
   View
 } from "react-native";
-// 1. Import Safe Area Hook
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Button from "../../components/Button";
 import Label from "../../components/Label";
 import TextField from "../../components/TextField";
 import { Colors } from "../../theme/colors";
+
+// Import Services
+import { authService } from "../../services/authService"; // 2. Import Service
 
 // Import Contexts
 import { AuthContext } from "../../context/AuthContext";
@@ -24,7 +28,6 @@ import { TabIntentContext } from "../../context/TabIntentContext";
 
 export default function SignIn() {
   const router = useRouter();
-  // 2. Get Insets
   const insets = useSafeAreaInsets();
   
   const { setAuthStatus } = useContext(AuthContext);
@@ -33,31 +36,51 @@ export default function SignIn() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // 3. Add Loading State
 
-  const handleSignIn = () => {
-    // TODO: Add backend logic here
-    
-    setAuthStatus("AUTHENTICATED");
-
-    // PRIORITY 1: Tab Intents
-    if (tabIntent) {
-      if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
-      else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
-      else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
-      setTabIntent(null);
+  const handleSignIn = async () => {
+    // Basic Validation
+    if (!email || !password) {
+      Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
 
-    // PRIORITY 2: Entry Intents
-    if (entryIntent) {
-      if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
-      else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
-      setEntryIntent(null);
-      return;
-    }
+    setLoading(true);
 
-    // DEFAULT FALLBACK
-    router.replace("/(tabs)/explore"); 
+    try {
+      // 4. Call Backend
+      // authService.login() handles the API call AND saves the token to SecureStore automatically
+      await authService.login(email, password);
+      
+      // 5. Update Global State
+      setAuthStatus("AUTHENTICATED");
+
+      // 6. Handle Redirects (Your existing logic)
+      // PRIORITY 1: Tab Intents
+      if (tabIntent) {
+        if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
+        else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
+        else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
+        setTabIntent(null);
+      } 
+      // PRIORITY 2: Entry Intents
+      else if (entryIntent) {
+        if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
+        else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
+        setEntryIntent(null);
+      } 
+      // DEFAULT FALLBACK
+      else {
+        router.replace("/(tabs)/explore"); 
+      }
+
+    } catch (error) {
+      console.log("Login Error:", error);
+      const errorMessage = error.response?.data?.detail || "Invalid email or password";
+      Alert.alert("Login Failed", errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const navigateToSignUp = () => {
@@ -68,7 +91,6 @@ export default function SignIn() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[
         styles.container,
-        // 3. Apply Dynamic Padding for status bar safety
         { paddingTop: insets.top, paddingBottom: insets.bottom }
       ]}>
         <KeyboardAvoidingView 
@@ -102,6 +124,7 @@ export default function SignIn() {
                 placeholder="Enter Email"
                 testID="emailTextInput"
                 keyboardType="email-address"
+                autoCapitalize="none" // Important for email input
               />
 
               <TextField
@@ -114,10 +137,11 @@ export default function SignIn() {
               />
 
               <Button 
-                title="Sign In" 
+                title={loading ? "Signing In..." : "Sign In"} // Update button text
                 variant="primary" 
                 onPress={handleSignIn} 
                 testID="SignInButton"
+                disabled={loading} // Disable button while loading
                 style={{ marginTop: 20 }}
               />
             </View>
@@ -151,8 +175,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    // FIXED: Removed justifyContent: 'center' so content stays at the top
-    // Optional: Add a little extra top spacing if the status bar feels too close
     paddingTop: 20, 
   },
   headerSection: {

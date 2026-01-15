@@ -1,13 +1,33 @@
-import { createContext, useState } from "react";
+import * as SecureStore from 'expo-secure-store';
+import { createContext, useEffect, useState } from "react";
 
-// CHANGE: Add a default object instead of 'null'
 export const AuthContext = createContext({
   authStatus: "UNKNOWN",
   setAuthStatus: () => {}, 
 });
 
 export function AuthProvider({ children }) {
-  const [authStatus, setAuthStatus] = useState("UNAUTHENTICATED");
+  // 1. Start as "UNKNOWN" so we can show a loading screen/splash while checking
+  const [authStatus, setAuthStatus] = useState("UNKNOWN");
+
+  // 2. Check for token on app mount
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('user_token');
+        if (token) {
+          setAuthStatus("AUTHENTICATED");
+        } else {
+          setAuthStatus("UNAUTHENTICATED");
+        }
+      } catch (e) {
+        console.error("Auth check failed:", e);
+        setAuthStatus("UNAUTHENTICATED");
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
 
   return (
     <AuthContext.Provider value={{ authStatus, setAuthStatus }}>

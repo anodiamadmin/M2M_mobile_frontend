@@ -1,11 +1,8 @@
-import Button from "@components/Button";
-import Label from "@components/Label";
-import TextField from "@components/TextField";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@theme/colors";
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
 import {
+  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -15,8 +12,16 @@ import {
   TouchableWithoutFeedback,
   View
 } from "react-native";
+import Button from "../../components/Button"; // Check path consistency (usually ../../components)
+import Label from "../../components/Label";
+import TextField from "../../components/TextField";
+import { Colors } from "../../theme/colors";
 // 1. Import Safe Area Hook
+import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+// Import Services
+import { authService } from "../../services/authService";
 
 // Import Contexts
 import { AuthContext } from "../../context/AuthContext";
@@ -37,31 +42,69 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = () => {
-    // TODO: Add backend registration logic here
-
-    setAuthStatus("AUTHENTICATED");
-
-    // PRIORITY 1: Tab Intents
-    if (tabIntent) {
-      if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
-      else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
-      else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
-      setTabIntent(null);
+  const handleSignUp = async () => {
+    // DEBUG: Test connection before doing anything else
+    // try {
+    //   console.log("Testing Health Check...");
+    //   // Note: We use the raw axios instance or fetch to bypass any token logic
+    //   const healthCheck = await fetch('http://192.168.X.X:8000/health'); 
+    //   const status = await healthCheck.json();
+    //   console.log("Health Check Passed:", status);
+    //   Alert.alert("Connection Success", JSON.stringify(status));
+    // } catch (err) {
+    //   console.log("Health Check Failed:", err);
+    //   Alert.alert("Connection Failed", err.message);
+    // }
+    // 1. Basic Validation
+    if (!name || !email || !password || !dob) {
+      Alert.alert("Missing Fields", "Please fill in all details.");
+      return;
+    }
+    if (!agreed) {
+      Alert.alert("Terms Required", "Please agree to the Terms & Conditions.");
       return;
     }
 
-    // PRIORITY 2: Entry Intents
-    if (entryIntent) {
-      if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
-      else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
-      setEntryIntent(null);
-      return;
-    }
+    setLoading(true);
 
-    // DEFAULT FALLBACK
-    router.replace("/(tabs)/explore");
+    try {
+      // 2. Call the Backend API
+      const response = await authService.register(name, email, password, dob);
+
+      // 3. Success! Save Token & Update Context
+      if (response.access_token) {
+        await SecureStore.setItemAsync('user_token', response.access_token);
+        setAuthStatus("AUTHENTICATED");
+
+        // 4. Redirect based on Intent
+        // PRIORITY 1: Tab Intents
+        if (tabIntent) {
+          if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
+          else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
+          else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
+          setTabIntent(null);
+        } 
+        // PRIORITY 2: Entry Intents
+        else if (entryIntent) {
+          if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
+          else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
+          setEntryIntent(null);
+        } 
+        // DEFAULT FALLBACK
+        else {
+          router.replace("/(tabs)/explore");
+        }
+      }
+    } catch (error) {
+      // 5. Handle Errors
+      console.log("Signup Error:", error);
+      const errorMessage = error.response?.data?.detail || "Something went wrong. Please try again.";
+      Alert.alert("Registration Failed", errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const navigateToTnC = () => {
@@ -124,6 +167,7 @@ export default function SignUp() {
                 onChangeText={setEmail}
                 placeholder="Enter Email"
                 keyboardType="email-address"
+                autoCapitalize="none"
               />
 
               <TextField
@@ -180,9 +224,10 @@ export default function SignUp() {
             {/* Action Buttons */}
             <View style={styles.actionSection}>
               <Button 
-                title="Continue" 
+                title={loading ? "Creating Account..." : "Continue"} 
                 variant="primary" 
                 onPress={handleSignUp} 
+                disabled={loading}
               />
 
               <View style={styles.footer}>
@@ -214,10 +259,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 20, // Added consistency with Sign In
+    paddingTop: 20, 
   },
   headerSection: {
-    marginBottom: 30, // INCREASED: Pushes form down (was 5)
+    marginBottom: 30, 
   },
   logoHeader: {
     flexDirection: "row",

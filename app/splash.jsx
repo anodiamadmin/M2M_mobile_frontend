@@ -1,12 +1,19 @@
 import Label from "@components/Label";
 import { Colors } from "@theme/colors";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Animated, Image, StatusBar, StyleSheet, View } from "react-native";
+
+// 1. Import AuthContext
+import { AuthContext } from "../context/AuthContext";
 
 export default function SplashScreen() {
   const router = useRouter();
+  // 2. Get the auth status
+  const { authStatus } = useContext(AuthContext);
+  
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [animationFinished, setAnimationFinished] = useState(false);
 
   const onImageLoaded = () => {
     Animated.timing(fadeAnim, {
@@ -15,10 +22,27 @@ export default function SplashScreen() {
       useNativeDriver: true,
     }).start();
 
+    // 3. Wait 3 seconds, then mark animation as done
     setTimeout(() => {
-      router.replace("/landing");
+      setAnimationFinished(true);
     }, 3000);
   };
+
+  // 4. "Traffic Controller" Effect
+  useEffect(() => {
+    // Only proceed if the minimum 3-second wait is over
+    if (!animationFinished) return;
+
+    // If Auth is still checking (rare, but possible), wait for it
+    if (authStatus === "UNKNOWN") return;
+
+    // Decision Time:
+    if (authStatus === "AUTHENTICATED") {
+      router.replace("/(tabs)/explore");
+    } else {
+      router.replace("/landing");
+    }
+  }, [authStatus, animationFinished]); 
 
   return (
     <View style={styles.container}> 

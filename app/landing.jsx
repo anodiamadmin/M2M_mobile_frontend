@@ -1,6 +1,9 @@
 import { useRouter } from "expo-router";
 import { useContext } from "react";
 import { Image, StatusBar, StyleSheet, View } from "react-native";
+// 1. Import the Safe Area Hook
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import Button from "../components/Button";
 import Label from "../components/Label";
 import { AuthContext } from "../context/AuthContext";
@@ -10,36 +13,36 @@ import { Colors } from "../theme/colors";
 export default function Landing() {
   const router = useRouter();
   
-  // 2. Access Auth and Intent Contexts
+  // 2. Get the safe area insets
+  const insets = useSafeAreaInsets();
+  
   const { authStatus } = useContext(AuthContext);
   const { setEntryIntent } = useContext(EntryIntentContext);
 
-  // Explore: Always goes to Explore tab
   const handleExplore = () => {
     router.replace("/(tabs)/explore");
   };
 
-  // Logic for Rent/List buttons
   const handleEntryAction = (intent) => {
-    // Set the intent ("RENT" or "LIST")
     setEntryIntent(intent);
 
-    // Check Auth Status immediately
     if (authStatus === "AUTHENTICATED") {
-      // User is already logged in? Skip auth and go to the deep link
       if (intent === "RENT") {
         router.replace("/(tabs)/my-rides/filter"); 
       } else if (intent === "LIST") {
         router.replace("/(tabs)/my-bikes/list"); 
       }
     } else {
-      // User is NOT logged in? Send to Sign In
       router.push("/(auth)/signin");
     }
   };
 
   return (
-    <View style={styles.container}>
+    // 3. Apply dynamic padding to the container
+    <View style={[
+      styles.container, 
+      { paddingTop: insets.top, paddingBottom: insets.bottom }
+    ]}>
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.topSection}>
@@ -57,7 +60,6 @@ export default function Landing() {
 
       <View style={styles.actionContainer}>
         
-        {/* Pass "RENT" intent */}
         <Button 
           title="Rent a Bike" 
           variant="primary"
@@ -65,7 +67,6 @@ export default function Landing() {
           style={styles.buttonSpacing}
         />
 
-        {/* Pass "LIST" intent */}
         <Button 
           title="List a Bike" 
           variant="primary"

@@ -15,16 +15,19 @@ import {
   TouchableWithoutFeedback,
   View
 } from "react-native";
+// 1. Import Safe Area Hook
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// 1. Import Contexts
+// Import Contexts
 import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 
 export default function SignUp() {
   const router = useRouter();
+  // 2. Get Insets
+  const insets = useSafeAreaInsets();
 
-  // 2. Access Contexts
   const { setAuthStatus } = useContext(AuthContext);
   const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
   const { tabIntent, setTabIntent } = useContext(TabIntentContext);
@@ -38,33 +41,21 @@ export default function SignUp() {
   const handleSignUp = () => {
     // TODO: Add backend registration logic here
 
-    // 3. Set Auth Status
     setAuthStatus("AUTHENTICATED");
 
-    // 4. CHECK INTENTS & REDIRECT
-
-    // PRIORITY 1: Tab Intents (If user clicked a locked tab)
+    // PRIORITY 1: Tab Intents
     if (tabIntent) {
-      if (tabIntent === "RIDES") {
-        router.replace("/(tabs)/my-rides");
-      } else if (tabIntent === "BIKES") {
-        router.replace("/(tabs)/my-bikes");
-      } else if (tabIntent === "PROFILE") {
-        router.replace("/(tabs)/profile");
-      }
-      // Clear intent
+      if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
+      else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
+      else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
       setTabIntent(null);
       return;
     }
 
-    // PRIORITY 2: Entry Intents (If user clicked Rent/List on Landing)
+    // PRIORITY 2: Entry Intents
     if (entryIntent) {
-      if (entryIntent === "RENT") {
-        router.replace("/(tabs)/my-rides/filter");
-      } else if (entryIntent === "LIST") {
-        router.replace("/(tabs)/my-bikes/list");
-      }
-      // Clear intent
+      if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
+      else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
       setEntryIntent(null);
       return;
     }
@@ -83,13 +74,18 @@ export default function SignUp() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <View style={[
+        styles.container,
+        // 3. Apply Dynamic Padding
+        { paddingTop: insets.top, paddingBottom: insets.bottom }
+      ]}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : undefined} 
           style={{ flex: 1 }}
         >
           <View style={styles.content}>
 
+            {/* Header Section */}
             <View style={styles.headerSection}>
               <View style={styles.logoHeader}>
                   <Image 
@@ -101,12 +97,12 @@ export default function SignUp() {
                     micro2move
                   </Label>
               </View>
-
               <Label size={24} bold style={styles.pageTitle}>
                 Sign up
               </Label>
             </View>
 
+            {/* Form Fields */}
             <View style={styles.form}>
               <TextField
                 label="Full Name (as displayed on government ID)"
@@ -139,6 +135,7 @@ export default function SignUp() {
               />
             </View>
 
+            {/* Terms & Conditions */}
             <View style={styles.termsContainer}>
               <TouchableOpacity 
                 onPress={() => setAgreed(!agreed)} 
@@ -163,6 +160,7 @@ export default function SignUp() {
               </View>
             </View>
 
+            {/* Upload Section */}
             <View style={styles.uploadSection}>
               <TouchableOpacity style={styles.uploadPill} activeOpacity={0.6}>
                  <Ionicons name="cloud-upload-outline" size={20} color={Colors.primary} style={styles.pillIcon} />
@@ -179,6 +177,7 @@ export default function SignUp() {
               </TouchableOpacity>
             </View>
 
+            {/* Action Buttons */}
             <View style={styles.actionSection}>
               <Button 
                 title="Continue" 
@@ -211,14 +210,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    paddingTop: Platform.OS === 'android' ? 40 : 30, 
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    paddingTop: 20, // Added consistency with Sign In
   },
   headerSection: {
-    marginBottom: 5,
+    marginBottom: 30, // INCREASED: Pushes form down (was 5)
   },
   logoHeader: {
     flexDirection: "row",
@@ -234,7 +233,7 @@ const styles = StyleSheet.create({
     color: "#333", 
   },
   form: {
-    marginBottom: 5,
+    marginBottom: 10,
   },
   termsContainer: {
     flexDirection: "row",
@@ -284,7 +283,7 @@ const styles = StyleSheet.create({
     flexShrink: 1, 
   },
   actionSection: {
-    marginTop: 10,
+    marginTop: 0,
   },
   footer: {
     flexDirection: "row",

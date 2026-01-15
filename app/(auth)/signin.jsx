@@ -9,20 +9,24 @@ import {
   TouchableWithoutFeedback,
   View
 } from "react-native";
+// 1. Import Safe Area Hook
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import Button from "../../components/Button";
 import Label from "../../components/Label";
 import TextField from "../../components/TextField";
 import { Colors } from "../../theme/colors";
 
-// 1. Import Contexts
+// Import Contexts
 import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 
 export default function SignIn() {
   const router = useRouter();
+  // 2. Get Insets
+  const insets = useSafeAreaInsets();
   
-  // 2. Access Contexts
   const { setAuthStatus } = useContext(AuthContext);
   const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
   const { tabIntent, setTabIntent } = useContext(TabIntentContext);
@@ -31,40 +35,28 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
 
   const handleSignIn = () => {
-    // TODO: Add backend logic here (e.g. verify credentials)
+    // TODO: Add backend logic here
     
-    // 3. Set Auth Status to Authenticated
     setAuthStatus("AUTHENTICATED");
 
-    // 4. CHECK INTENTS & REDIRECT
-
-    // PRIORITY 1: Tab Intents (If user clicked a locked tab)
+    // PRIORITY 1: Tab Intents
     if (tabIntent) {
-      if (tabIntent === "RIDES") {
-        router.replace("/(tabs)/my-rides");
-      } else if (tabIntent === "BIKES") {
-        router.replace("/(tabs)/my-bikes");
-      } else if (tabIntent === "PROFILE") {
-        router.replace("/(tabs)/profile");
-      }
-      // Clear intent so it doesn't persist
+      if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
+      else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
+      else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
       setTabIntent(null);
       return;
     }
 
-    // PRIORITY 2: Entry Intents (If user clicked Rent/List on Landing)
+    // PRIORITY 2: Entry Intents
     if (entryIntent) {
-      if (entryIntent === "RENT") {
-        router.replace("/(tabs)/my-rides/filter");
-      } else if (entryIntent === "LIST") {
-        router.replace("/(tabs)/my-bikes/list");
-      }
-      // Clear intent
+      if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
+      else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
       setEntryIntent(null);
       return;
     }
 
-    // DEFAULT FALLBACK (Go to Explore)
+    // DEFAULT FALLBACK
     router.replace("/(tabs)/explore"); 
   };
 
@@ -74,7 +66,11 @@ export default function SignIn() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <View style={[
+        styles.container,
+        // 3. Apply Dynamic Padding for status bar safety
+        { paddingTop: insets.top, paddingBottom: insets.bottom }
+      ]}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : undefined} 
           style={{ flex: 1 }}
@@ -151,11 +147,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    paddingTop: Platform.OS === 'android' ? 40 : 30,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    // FIXED: Removed justifyContent: 'center' so content stays at the top
+    // Optional: Add a little extra top spacing if the status bar feels too close
+    paddingTop: 20, 
   },
   headerSection: {
     marginBottom: 5,

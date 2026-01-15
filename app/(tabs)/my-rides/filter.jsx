@@ -1,11 +1,11 @@
-import { View } from "react-native";
 import Label from "@components/Label";
+import { View } from "react-native";
 
 export default function RideFilter() {
   return (
-    <View style={{ flex: 1, padding: 24 }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Label size={20} bold>
-        Filter Rides
+        Book an E-Bike
       </Label>
     </View>
   );

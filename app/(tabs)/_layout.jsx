@@ -1,13 +1,18 @@
-import { Ionicons } from "@expo/vector-icons"; // 1. Import Icons
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
-import { Colors } from "../../theme/colors"; // 2. Import Colors
+import { Colors } from "../../theme/colors";
+// 1. Import the Safe Area hook
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const router = useRouter();
   
+  // 2. Get the safe area insets (top, bottom, left, right)
+  const insets = useSafeAreaInsets();
+
   const { authStatus } = useContext(AuthContext);
   const { setTabIntent } = useContext(TabIntentContext);
 
@@ -23,20 +28,25 @@ export default function TabsLayout() {
     <Tabs 
       screenOptions={{ 
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary, // Active tab color
-        tabBarInactiveTintColor: "#8E8E93",    // Inactive tab color
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: "#8E8E93",
         tabBarStyle: {
-          paddingBottom: 5, // Adjusts padding for modern phones
-          height: 60,
+          // 3. FIXED: Dynamic Height
+          // Base height (60) + whatever space the system buttons need (insets.bottom)
+          height: 60 + insets.bottom,
+          
+          // 4. FIXED: Dynamic Padding
+          // Push the icons up by the safe area amount so they aren't covered
+          paddingBottom: insets.bottom + 5,
+          paddingTop: 5, // Add a little top padding to center content
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontFamily: "Lato-Regular", // Consistent font
+          fontFamily: "Lato-Regular",
         }
       }}
     >
       
-      {/* 1. Explore (Search/Map) */}
       <Tabs.Screen 
         name="explore" 
         options={{
@@ -47,7 +57,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 2. My Rides (Bookings/Trips) */}
       <Tabs.Screen 
         name="my-rides" 
         listeners={{
@@ -61,7 +70,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 3. My Bikes (Garage/Listings) */}
       <Tabs.Screen 
         name="my-bikes" 
         listeners={{
@@ -75,7 +83,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 4. Profile */}
       <Tabs.Screen 
         name="profile" 
         listeners={{

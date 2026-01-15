@@ -45,19 +45,6 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
-    // DEBUG: Test connection before doing anything else
-    // try {
-    //   console.log("Testing Health Check...");
-    //   // Note: We use the raw axios instance or fetch to bypass any token logic
-    //   const healthCheck = await fetch('http://192.168.X.X:8000/health'); 
-    //   const status = await healthCheck.json();
-    //   console.log("Health Check Passed:", status);
-    //   Alert.alert("Connection Success", JSON.stringify(status));
-    // } catch (err) {
-    //   console.log("Health Check Failed:", err);
-    //   Alert.alert("Connection Failed", err.message);
-    // }
-    // 1. Basic Validation
     if (!name || !email || !password || !dob) {
       Alert.alert("Missing Fields", "Please fill in all details.");
       return;
@@ -70,35 +57,30 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      // 2. Call the Backend API
       const response = await authService.register(name, email, password, dob);
 
-      // 3. Success! Save Token & Update Context
       if (response.access_token) {
         await SecureStore.setItemAsync('user_token', response.access_token);
         setAuthStatus("AUTHENTICATED");
 
-        // 4. Redirect based on Intent
-        // PRIORITY 1: Tab Intents
         if (tabIntent) {
           if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
           else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
           else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
           setTabIntent(null);
         } 
-        // PRIORITY 2: Entry Intents
+
         else if (entryIntent) {
           if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
           else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
           setEntryIntent(null);
-        } 
-        // DEFAULT FALLBACK
+        }
+
         else {
           router.replace("/(tabs)/explore");
         }
       }
     } catch (error) {
-      // 5. Handle Errors
       console.log("Signup Error:", error);
       const errorMessage = error.response?.data?.detail || "Something went wrong. Please try again.";
       Alert.alert("Registration Failed", errorMessage);
@@ -119,7 +101,6 @@ export default function SignUp() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[
         styles.container,
-        // 3. Apply Dynamic Padding
         { paddingTop: insets.top, paddingBottom: insets.bottom }
       ]}>
         <KeyboardAvoidingView 
@@ -128,7 +109,6 @@ export default function SignUp() {
         >
           <View style={styles.content}>
 
-            {/* Header Section */}
             <View style={styles.headerSection}>
               <View style={styles.logoHeader}>
                   <Image 
@@ -145,7 +125,6 @@ export default function SignUp() {
               </Label>
             </View>
 
-            {/* Form Fields */}
             <View style={styles.form}>
               <TextField
                 label="Full Name (as displayed on government ID)"
@@ -179,7 +158,6 @@ export default function SignUp() {
               />
             </View>
 
-            {/* Terms & Conditions */}
             <View style={styles.termsContainer}>
               <TouchableOpacity 
                 onPress={() => setAgreed(!agreed)} 
@@ -204,7 +182,6 @@ export default function SignUp() {
               </View>
             </View>
 
-            {/* Upload Section */}
             <View style={styles.uploadSection}>
               <TouchableOpacity style={styles.uploadPill} activeOpacity={0.6}>
                  <Ionicons name="cloud-upload-outline" size={20} color={Colors.primary} style={styles.pillIcon} />
@@ -221,7 +198,6 @@ export default function SignUp() {
               </TouchableOpacity>
             </View>
 
-            {/* Action Buttons */}
             <View style={styles.actionSection}>
               <Button 
                 title={loading ? "Creating Account..." : "Continue"} 

@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { useContext } from "react";
 import { Image, StatusBar, StyleSheet, View } from "react-native";
-// 1. Import the Safe Area Hook
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Button from "../components/Button";
@@ -13,7 +12,6 @@ import { Colors } from "../theme/colors";
 export default function Landing() {
   const router = useRouter();
   
-  // 2. Get the safe area insets
   const insets = useSafeAreaInsets();
   
   const { authStatus } = useContext(AuthContext);
@@ -38,8 +36,7 @@ export default function Landing() {
   };
 
   return (
-    // 3. Apply dynamic padding to the container
-    <View style={[
+   <View style={[
       styles.container, 
       { paddingTop: insets.top, paddingBottom: insets.bottom }
     ]}>

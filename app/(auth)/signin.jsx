@@ -1,8 +1,7 @@
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
 import {
-  Alert // 1. Import Alert
-  ,
+  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -18,10 +17,8 @@ import Label from "../../components/Label";
 import TextField from "../../components/TextField";
 import { Colors } from "../../theme/colors";
 
-// Import Services
 import { authService } from "../../services/authService"; // 2. Import Service
 
-// Import Contexts
 import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
@@ -36,10 +33,9 @@ export default function SignIn() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); // 3. Add Loading State
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    // Basic Validation
     if (!email || !password) {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
@@ -48,28 +44,21 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      // 4. Call Backend
-      // authService.login() handles the API call AND saves the token to SecureStore automatically
       await authService.login(email, password);
       
-      // 5. Update Global State
       setAuthStatus("AUTHENTICATED");
 
-      // 6. Handle Redirects (Your existing logic)
-      // PRIORITY 1: Tab Intents
       if (tabIntent) {
         if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
         else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
         else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
         setTabIntent(null);
       } 
-      // PRIORITY 2: Entry Intents
       else if (entryIntent) {
         if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
         else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
         setEntryIntent(null);
       } 
-      // DEFAULT FALLBACK
       else {
         router.replace("/(tabs)/explore"); 
       }

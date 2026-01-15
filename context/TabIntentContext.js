@@ -1,6 +1,6 @@
 import { createContext, useState } from "react";
 
-// CHANGE: Added default safety object to prevent "read property of null" errors
+// Added default safety object to prevent "read property of null" errors
 export const TabIntentContext = createContext({
   tabIntent: null,
   setTabIntent: () => {},

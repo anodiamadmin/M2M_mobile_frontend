@@ -7,10 +7,8 @@ export const AuthContext = createContext({
 });
 
 export function AuthProvider({ children }) {
-  // 1. Start as "UNKNOWN" so we can show a loading screen/splash while checking
   const [authStatus, setAuthStatus] = useState("UNKNOWN");
 
-  // 2. Check for token on app mount
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {

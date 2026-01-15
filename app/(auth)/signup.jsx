@@ -4,20 +4,30 @@ import TextField from "@components/TextField";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@theme/colors";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Image,
-  Keyboard, // Added
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback, // Added
+  TouchableWithoutFeedback,
   View
 } from "react-native";
 
+// 1. Import Contexts
+import { AuthContext } from "../../context/AuthContext";
+import { EntryIntentContext } from "../../context/EntryIntentContext";
+import { TabIntentContext } from "../../context/TabIntentContext";
+
 export default function SignUp() {
   const router = useRouter();
+
+  // 2. Access Contexts
+  const { setAuthStatus } = useContext(AuthContext);
+  const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
+  const { tabIntent, setTabIntent } = useContext(TabIntentContext);
 
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
@@ -26,7 +36,41 @@ export default function SignUp() {
   const [agreed, setAgreed] = useState(false);
 
   const handleSignUp = () => {
-    router.replace("/(tabs)/my-rides");
+    // TODO: Add backend registration logic here
+
+    // 3. Set Auth Status
+    setAuthStatus("AUTHENTICATED");
+
+    // 4. CHECK INTENTS & REDIRECT
+
+    // PRIORITY 1: Tab Intents (If user clicked a locked tab)
+    if (tabIntent) {
+      if (tabIntent === "RIDES") {
+        router.replace("/(tabs)/my-rides");
+      } else if (tabIntent === "BIKES") {
+        router.replace("/(tabs)/my-bikes");
+      } else if (tabIntent === "PROFILE") {
+        router.replace("/(tabs)/profile");
+      }
+      // Clear intent
+      setTabIntent(null);
+      return;
+    }
+
+    // PRIORITY 2: Entry Intents (If user clicked Rent/List on Landing)
+    if (entryIntent) {
+      if (entryIntent === "RENT") {
+        router.replace("/(tabs)/my-rides/filter");
+      } else if (entryIntent === "LIST") {
+        router.replace("/(tabs)/my-bikes/list");
+      }
+      // Clear intent
+      setEntryIntent(null);
+      return;
+    }
+
+    // DEFAULT FALLBACK
+    router.replace("/(tabs)/explore");
   };
 
   const navigateToTnC = () => {
@@ -38,7 +82,6 @@ export default function SignUp() {
   };
 
   return (
-    // Wrapped content in TouchableWithoutFeedback to handle outside taps
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <KeyboardAvoidingView 
@@ -115,7 +158,7 @@ export default function SignUp() {
                   variant="hyperlink"
                   onPress={navigateToTnC}
                   textSize={13}
-                  style={{ marginVertical: 0 }} // Override default margin
+                  style={{ marginVertical: 0 }} 
                 />
               </View>
             </View>

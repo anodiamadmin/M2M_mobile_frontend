@@ -3,25 +3,39 @@ import { useContext } from "react";
 import { Image, StatusBar, StyleSheet, View } from "react-native";
 import Button from "../components/Button";
 import Label from "../components/Label";
+import { AuthContext } from "../context/AuthContext";
 import { EntryIntentContext } from "../context/EntryIntentContext";
 import { Colors } from "../theme/colors";
 
 export default function Landing() {
   const router = useRouter();
+  
+  // 2. Access Auth and Intent Contexts
+  const { authStatus } = useContext(AuthContext);
   const { setEntryIntent } = useContext(EntryIntentContext);
 
-  const handleRent = () => {
-    setEntryIntent("RENT");
-    router.push("/(auth)/signin");
-  };
-
-  const handleList = () => {
-    setEntryIntent("LIST");
-    router.push("/(auth)/signin");
-  };
-
+  // Explore: Always goes to Explore tab
   const handleExplore = () => {
     router.replace("/(tabs)/explore");
+  };
+
+  // Logic for Rent/List buttons
+  const handleEntryAction = (intent) => {
+    // Set the intent ("RENT" or "LIST")
+    setEntryIntent(intent);
+
+    // Check Auth Status immediately
+    if (authStatus === "AUTHENTICATED") {
+      // User is already logged in? Skip auth and go to the deep link
+      if (intent === "RENT") {
+        router.replace("/(tabs)/my-rides/filter"); 
+      } else if (intent === "LIST") {
+        router.replace("/(tabs)/my-bikes/list"); 
+      }
+    } else {
+      // User is NOT logged in? Send to Sign In
+      router.push("/(auth)/signin");
+    }
   };
 
   return (
@@ -35,11 +49,7 @@ export default function Landing() {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Label 
-            size={14} 
-            color={Colors.white} 
-            style={styles.tagline}
-          >
+          <Label size={14} color={Colors.white} style={styles.tagline}>
             Shining the light on{'\n'}micro-mobility
           </Label>
         </View>
@@ -47,17 +57,19 @@ export default function Landing() {
 
       <View style={styles.actionContainer}>
         
+        {/* Pass "RENT" intent */}
         <Button 
           title="Rent a Bike" 
           variant="primary"
-          onPress={handleRent}
+          onPress={() => handleEntryAction("RENT")}
           style={styles.buttonSpacing}
         />
 
+        {/* Pass "LIST" intent */}
         <Button 
           title="List a Bike" 
           variant="primary"
-          onPress={handleList}
+          onPress={() => handleEntryAction("LIST")}
           style={styles.buttonSpacing}
         />
 
@@ -111,7 +123,7 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     width: "100%", 
-    paddingHorizontal: 24, // UPDATED: Changed from 40 to 24 to match Signin/Signup
+    paddingHorizontal: 24, 
     alignItems: "center", 
   },
   buttonSpacing: {

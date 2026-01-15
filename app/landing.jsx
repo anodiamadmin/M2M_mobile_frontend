@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     width: "100%", 
-    paddingHorizontal: 40, 
+    paddingHorizontal: 24, // UPDATED: Changed from 40 to 24 to match Signin/Signup
     alignItems: "center", 
   },
   buttonSpacing: {

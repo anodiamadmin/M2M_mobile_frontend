@@ -29,6 +29,27 @@ export default function Button({
     textColor = Colors.primary;
   }
 
+  if (isHyperlink) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.5}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={style}
+      >
+        <Label
+          bold
+          secondary
+          size={textSize}
+          color={textColor}
+          style={{ textDecorationLine: "underline" }}
+        >
+          {title}
+        </Label>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -46,9 +67,8 @@ export default function Button({
       <Label
         bold
         secondary
-        size={textSize} // Now uses the prop instead of hardcoded 20
+        size={textSize} 
         color={textColor}
-        style={isHyperlink ? { textDecorationLine: "underline" } : undefined}
       >
         {title}
       </Label>

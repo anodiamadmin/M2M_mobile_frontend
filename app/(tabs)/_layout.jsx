@@ -1,16 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useContext } from "react";
+import { Pressable } from "react-native"; // 1. Import Pressable & Platform
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { AuthContext } from "../../context/AuthContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 import { Colors } from "../../theme/colors";
-// 1. Import the Safe Area hook
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const router = useRouter();
-  
-  // 2. Get the safe area insets (top, bottom, left, right)
   const insets = useSafeAreaInsets();
 
   const { authStatus } = useContext(AuthContext);
@@ -31,19 +30,31 @@ export default function TabsLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: "#8E8E93",
         tabBarStyle: {
-          // 3. FIXED: Dynamic Height
-          // Base height (60) + whatever space the system buttons need (insets.bottom)
           height: 60 + insets.bottom,
-          
-          // 4. FIXED: Dynamic Padding
-          // Push the icons up by the safe area amount so they aren't covered
           paddingBottom: insets.bottom + 5,
-          paddingTop: 5, // Add a little top padding to center content
+          paddingTop: 5,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: "Lato-Regular",
-        }
+        },
+        // 2. ADD THIS: Custom Tab Button for Click Effect
+        tabBarButton: (props) => (
+          <Pressable
+            {...props}
+            // Android: Adds the material ripple effect
+            android_ripple={{ color: "#E6F4FE", borderless: true, radius: 50 }}
+            // iOS & Android: Adds opacity fade on press
+            style={({ pressed }) => [
+              props.style,
+              { 
+                opacity: pressed ? 0.5 : 1,
+                // Optional: Subtle scale down animation
+                transform: [{ scale: pressed ? 0.96 : 1 }] 
+              }
+            ]}
+          />
+        ),
       }}
     >
       

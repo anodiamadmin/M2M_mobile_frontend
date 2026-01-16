@@ -2,9 +2,12 @@ import Label from "@components/Label";
 import { Colors } from "@theme/colors";
 import { useRouter } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Animated, Image, StatusBar, StyleSheet, View } from "react-native";
+import { Animated, Image, StatusBar, View } from "react-native";
 
 import { AuthContext } from "../context/AuthContext";
+
+// 1. Updated Import: No longer using 'as styles'
+import { splashStyles } from "../utils/styles";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -26,7 +29,6 @@ export default function SplashScreen() {
 
   useEffect(() => {
     if (!animationFinished) return;
-
     if (authStatus === "UNKNOWN") return;
 
     if (authStatus === "AUTHENTICATED") {
@@ -37,26 +39,27 @@ export default function SplashScreen() {
   }, [authStatus, animationFinished]); 
 
   return (
-    <View style={styles.container}> 
+    // 2. Updated Usage: Changed 'styles.container' to 'splashStyles.container'
+    <View style={splashStyles.container}> 
       <StatusBar barStyle="light-content" />
 
-      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
-        <View style={styles.topSection}>
+      <Animated.View style={[splashStyles.contentContainer, { opacity: fadeAnim }]}>
+        <View style={splashStyles.topSection}>
           <Label size={18} color={Colors.white} style={{ letterSpacing: 0.5 }}>
             Making Sydney E-bike Friendly
           </Label>
         </View>
 
-        <View style={styles.logoContainer}>
+        <View style={splashStyles.logoContainer}>
           <Image 
             source={require("../assets/images/SplashLogo.png")} 
-            style={styles.logo}
+            style={splashStyles.logo}
             resizeMode="contain"
             onLoad={onImageLoaded}
           />
         </View>
 
-        <View style={styles.footerContainer}>
+        <View style={splashStyles.footerContainer}>
           <Label style={{ textAlign: 'center' }}>
             <Label size={24} bold secondary color={Colors.secondary}>Affordable</Label>
             <Label size={24} bold secondary color={Colors.primary}> Reliable</Label>
@@ -68,31 +71,3 @@ export default function SplashScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.black, 
-  },
-  contentContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 100,
-  },
-  topSection: {
-    marginTop: 40,
-  },
-  logoContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logo: {
-    width: 250,
-    height: 250,
-    transform: [{ scale: 1.8 }], 
-  },
-  footerContainer: {
-    marginBottom: 40,
-  },
-});

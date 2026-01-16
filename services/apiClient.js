@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // ngrok URL for https local dev
-const BASE_URL = 'https://556845265a53.ngrok-free.app';
+const BASE_URL = 'https://9fd3abd8e3bc.ngrok-free.app';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

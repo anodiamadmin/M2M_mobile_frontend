@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // ngrok URL for https local dev
-const BASE_URL = 'https://1caf9de2625e.ngrok-free.app';
+const BASE_URL = 'https://556845265a53.ngrok-free.app';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -14,7 +14,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   async (config) => {
-    console.log(`[API REQUEST] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
+    // console.log(`[API REQUEST] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
     try {
       const token = await SecureStore.getItemAsync('user_token');
       if (token) {

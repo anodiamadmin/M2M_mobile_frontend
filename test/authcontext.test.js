@@ -1,43 +1,79 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthProvider, AuthContext } from '../AuthContext';
+import { Text } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
+import { AuthContext, AuthProvider } from '../context/AuthContext';
+
+/* =====================================================
+   MOCK expo-secure-store (CRITICAL)
+===================================================== */
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(),
 }));
 
-const Consumer = () => {
-  const { authStatus } = React.useContext(AuthContext);
-  return <>{authStatus}</>;
-};
+/* =====================================================
+   TEST CONSUMER COMPONENT
+   (to read context values)
+===================================================== */
+function TestConsumer() {
+  return (
+    <AuthContext.Consumer>
+      {({ authStatus }) => <Text testID="authStatus">{authStatus}</Text>}
+    </AuthContext.Consumer>
+  );
+}
 
-describe('Auth Context', () => {
-  it('sets AUTHENTICATED if token exists', async () => {
-    AsyncStorage.getItem.mockResolvedValue('token');
-
-    const { getByText } = render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>
-    );
-
-    await waitFor(() =>
-      expect(getByText('AUTHENTICATED')).toBeTruthy()
-    );
+/* =====================================================
+   TEST SUITE
+===================================================== */
+describe('AuthContext', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('sets UNAUTHENTICATED if token missing', async () => {
-    AsyncStorage.getItem.mockResolvedValue(null);
+  it('sets authStatus to AUTHENTICATED when token exists', async () => {
+    SecureStore.getItemAsync.mockResolvedValue('mock_token');
 
-    const { getByText } = render(
+    const { getByTestId } = render(
       <AuthProvider>
-        <Consumer />
+        <TestConsumer />
       </AuthProvider>
     );
 
-    await waitFor(() =>
-      expect(getByText('UNAUTHENTICATED')).toBeTruthy()
+    await waitFor(() => {
+      expect(getByTestId('authStatus').props.children)
+        .toBe('AUTHENTICATED');
+    });
+  });
+
+  it('sets authStatus to UNAUTHENTICATED when token does not exist', async () => {
+    SecureStore.getItemAsync.mockResolvedValue(null);
+
+    const { getByTestId } = render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
     );
+
+    await waitFor(() => {
+      expect(getByTestId('authStatus').props.children)
+        .toBe('UNAUTHENTICATED');
+    });
+  });
+
+  it('falls back to UNAUTHENTICATED if SecureStore throws error', async () => {
+    SecureStore.getItemAsync.mockRejectedValue(new Error('SecureStore error'));
+
+    const { getByTestId } = render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(getByTestId('authStatus').props.children)
+        .toBe('UNAUTHENTICATED');
+    });
   });
 });

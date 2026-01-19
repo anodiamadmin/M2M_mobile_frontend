@@ -31,6 +31,8 @@ import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 
+import { signupStyles } from "../../utils/styles";
+
 export default function SignUp() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -215,32 +217,32 @@ export default function SignUp() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[
-        styles.container,
+        signupStyles.container,
         { paddingTop: insets.top, paddingBottom: insets.bottom }
       ]}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : undefined} 
           style={{ flex: 1 }}
         >
-          <View style={styles.content}>
+          <View style={signupStyles.content}>
 
-            <View style={styles.headerSection}>
-              <View style={styles.logoHeader}>
+            <View style={signupStyles.headerSection}>
+              <View style={signupStyles.logoHeader}>
                   <Image 
                     source={require("../../assets/images/LogoLightNoNameNoBg.png")} 
-                    style={styles.headerLogo}
+                    style={signupStyles.headerLogo}
                     resizeMode="contain"
                   />
                   <Label size={20} bold color={Colors.primary}>
                     micro2move
                   </Label>
               </View>
-              <Label size={24} bold style={styles.pageTitle}>
+              <Label size={24} bold style={signupStyles.pageTitle}>
                 Sign up
               </Label>
             </View>
 
-            <View style={styles.form}>
+            <View style={signupStyles.form}>
               <TextField
                 label="Full Name (as displayed on government ID)"
                 value={name}
@@ -262,10 +264,10 @@ export default function SignUp() {
                 
                 <TouchableOpacity 
                   onPress={toggleDatePicker} 
-                  style={styles.dateButton}
+                  style={signupStyles.dateButton}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.dateText, !dobString && styles.placeholderText]}>
+                  <Text style={[signupStyles.dateText, !dobString && signupStyles.placeholderText]}>
                     {dobString || "Select Your Date of Birth"}
                   </Text>
                   <Ionicons name="calendar-outline" size={20} color="#666" />
@@ -300,51 +302,51 @@ export default function SignUp() {
               />
             </View>
 
-            <View style={styles.uploadSection}>
+            <View style={signupStyles.uploadSection}>
               {/* ID Proof Button */}
               <TouchableOpacity 
-                style={[styles.uploadPill, idImage && styles.uploadPillActive]} 
+                style={[signupStyles.uploadPill, idImage && signupStyles.uploadPillActive]} 
                 activeOpacity={0.6}
                 onPress={() => takePhoto(setIdImage, [4, 3])}
               >
                  {idImage ? (
-                   <Image source={{ uri: idImage }} style={styles.uploadedThumb} />
+                   <Image source={{ uri: idImage }} style={signupStyles.uploadedThumb} />
                  ) : (
-                   <Ionicons name="card-outline" size={20} color={Colors.primary} style={styles.pillIcon} />
+                   <Ionicons name="card-outline" size={20} color={Colors.primary} style={signupStyles.pillIcon} />
                  )}
-                <Label size={11} secondary color={idImage ? Colors.primary : "#555"} style={styles.pillLabel}>
+                <Label size={11} secondary color={idImage ? Colors.primary : "#555"} style={signupStyles.pillLabel}>
                   {idImage ? "ID Captured" : "Capture Govt. ID"}
                 </Label>
               </TouchableOpacity>
 
               {/* Selfie Button */}
               <TouchableOpacity 
-                style={[styles.uploadPill, profileImage && styles.uploadPillActive]} 
+                style={[signupStyles.uploadPill, profileImage && signupStyles.uploadPillActive]} 
                 activeOpacity={0.6}
                 onPress={() => takePhoto(setProfileImage, [1, 1])}
               >
                  {profileImage ? (
-                   <Image source={{ uri: profileImage }} style={styles.uploadedThumb} />
+                   <Image source={{ uri: profileImage }} style={signupStyles.uploadedThumb} />
                  ) : (
-                   <Ionicons name="camera-outline" size={20} color={Colors.primary} style={styles.pillIcon} />
+                   <Ionicons name="camera-outline" size={20} color={Colors.primary} style={signupStyles.pillIcon} />
                  )}
-                <Label size={11} secondary color={profileImage ? Colors.primary : "#555"} style={styles.pillLabel}>
+                <Label size={11} secondary color={profileImage ? Colors.primary : "#555"} style={signupStyles.pillLabel}>
                   {profileImage ? "Selfie Taken" : "Take Your Selfie"}
                 </Label>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.termsContainer}>
+            <View style={signupStyles.termsContainer}>
               <TouchableOpacity 
                 onPress={() => setAgreed(!agreed)} 
-                style={[styles.checkbox, agreed && styles.checkboxActive]}
+                style={[signupStyles.checkbox, agreed && signupStyles.checkboxActive]}
                 activeOpacity={0.6}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 {agreed && <Ionicons name="checkmark" size={16} color={Colors.white} />}
               </TouchableOpacity>
               
-              <View style={styles.inlineTextContainer}>
+              <View style={signupStyles.inlineTextContainer}>
                 <Label size={13} secondary color="#666">
                   I accept the{" "}
                 </Label>
@@ -358,7 +360,7 @@ export default function SignUp() {
               </View>
             </View>
 
-            <View style={styles.actionSection}>
+            <View style={signupStyles.actionSection}>
               <Button 
                 title={getButtonTitle()} 
                 variant="primary" 
@@ -366,7 +368,7 @@ export default function SignUp() {
                 disabled={loading}
               />
 
-              <View style={styles.footer}>
+              <View style={signupStyles.footer}>
                 <Label size={14} secondary color="#666">
                   Already an user?{" "}
                 </Label>
@@ -387,130 +389,3 @@ export default function SignUp() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20, 
-  },
-  headerSection: {
-    marginBottom: 20, 
-  },
-  logoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  headerLogo: {
-    width: 40, 
-    height: 40,
-  },
-  pageTitle: {
-    fontFamily: "Comfortaa-Bold", 
-    color: "#333", 
-  },
-  form: {
-    marginBottom: 10,
-  },
-  
-  // MATCHING TEXTFIELD STYLE
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#E6E6FA', 
-    paddingHorizontal: 16,
-    height: 50, 
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#F0F0F8',     
-  },
-  dateText: {
-    fontSize: 15, 
-    color: '#333',
-    fontFamily: 'Lato-Regular',
-  },
-  placeholderText: {
-    color: '#999',
-    fontFamily: 'Lato-Regular', 
-  },
-  
-  termsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-    marginTop: 5,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 1,
-    borderColor: "#ccc", 
-    borderRadius: 4,
-    marginRight: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F0F0F8", 
-  },
-  checkboxActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  inlineTextContainer: {
-    flexDirection: "row", 
-    alignItems: "center", 
-  },
-  
-  uploadSection: {
-    flexDirection: 'row', 
-    gap: 12, 
-    marginBottom: 20, 
-    height: 60, 
-  },
-  uploadPill: {
-    flex: 1, 
-    height: 50, 
-    paddingVertical: 8, 
-    backgroundColor: "#E6E6FA", 
-    borderRadius: 25, 
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', 
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: "#E8E8F0",
-    overflow: 'hidden',
-  },
-  uploadPillActive: {
-    backgroundColor: "#E6F4FE", 
-    borderColor: Colors.primary,
-  },
-  pillIcon: {
-    marginRight: 6,
-  },
-  pillLabel: {
-    textAlign: 'center',
-    flexShrink: 1,
-    fontSize: 11,
-  },
-  uploadedThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  
-  actionSection: {
-    marginTop: 0,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 15,
-  },
-});

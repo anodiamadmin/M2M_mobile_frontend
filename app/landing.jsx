@@ -8,6 +8,7 @@ import Label from "../components/Label";
 import { AuthContext } from "../context/AuthContext";
 import { EntryIntentContext } from "../context/EntryIntentContext";
 import { Colors } from "../theme/colors";
+import { landingStyles } from "../utils/styles";
 
 export default function Landing() {
   const router = useRouter();
@@ -37,45 +38,45 @@ export default function Landing() {
 
   return (
    <View style={[
-      styles.container, 
+      landingStyles.container, 
       { paddingTop: insets.top, paddingBottom: insets.bottom }
     ]}>
       <StatusBar barStyle="dark-content" />
 
-      <View style={styles.topSection}>
-        <View style={styles.circleBadge}>
+      <View style={landingStyles.topSection}>
+        <View style={landingStyles.circleBadge}>
           <Image 
             source={require("../assets/images/SplashLogo.png")} 
-            style={styles.logo}
+            style={landingStyles.logo}
             resizeMode="contain"
           />
-          <Label size={14} color={Colors.white} style={styles.tagline}>
+          <Label size={14} color={Colors.white} style={landingStyles.tagline}>
             Shining the light on{'\n'}micro-mobility
           </Label>
         </View>
       </View>
 
-      <View style={styles.actionContainer}>
+      <View style={landingStyles.actionContainer}>
         
         <Button 
           title="Rent a Bike" 
           variant="primary"
           onPress={() => handleEntryAction("RENT")}
-          style={styles.buttonSpacing}
+          style={landingStyles.buttonSpacing}
         />
 
         <Button 
           title="List a Bike" 
           variant="primary"
           onPress={() => handleEntryAction("LIST")}
-          style={styles.buttonSpacing}
+          style={landingStyles.buttonSpacing}
         />
 
         <Button 
           title="Explore" 
           variant="hyperlink"
           onPress={handleExplore}
-          style={styles.exploreButton} 
+          style={landingStyles.exploreButton} 
         />
 
       </View>
@@ -83,51 +84,3 @@ export default function Landing() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topSection: {
-    marginBottom: 60,
-    alignItems: "center",
-  },
-  circleBadge: {
-    width: 280,
-    height: 280,
-    borderRadius: 140, 
-    backgroundColor: Colors.black, 
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    transform: [{ scale: 1.8 }],
-    marginBottom: 10,
-  },
-  tagline: {
-    textAlign: "center",
-    lineHeight: 20,
-    opacity: 0.9,
-  },
-  actionContainer: {
-    width: "100%", 
-    paddingHorizontal: 24, 
-    alignItems: "center", 
-  },
-  buttonSpacing: {
-    marginBottom: 15,
-  },
-  exploreButton: {
-    marginTop: 10,
-  },
-});

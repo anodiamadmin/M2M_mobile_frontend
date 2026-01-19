@@ -23,6 +23,8 @@ import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 
+import { signinStyles } from "../../utils/styles";
+
 export default function SignIn() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -79,20 +81,20 @@ export default function SignIn() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={[
-        styles.container,
+        signinStyles.container,
         { paddingTop: insets.top, paddingBottom: insets.bottom }
       ]}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : undefined} 
           style={{ flex: 1 }}
         >
-          <View style={styles.content}>
+          <View style={signinStyles.content}>
           
-            <View style={styles.headerSection}>
-              <View style={styles.logoHeader}>
+            <View style={signinStyles.headerSection}>
+              <View style={signinStyles.logoHeader}>
                  <Image 
                    source={require("../../assets/images/LogoLightNoNameNoBg.png")} 
-                   style={styles.headerLogo}
+                   style={signinStyles.headerLogo}
                    resizeMode="contain"
                  />
                  <Label size={20} bold color={Colors.primary}>
@@ -100,12 +102,12 @@ export default function SignIn() {
                  </Label>
               </View>
 
-              <Label size={24} bold style={styles.pageTitle}>
+              <Label size={24} bold style={signinStyles.pageTitle}>
                 Sign in to continue
               </Label>
             </View>
 
-            <View style={styles.form}>
+            <View style={signinStyles.form}>
               <TextField
                 label="Email"
                 value={email}
@@ -135,7 +137,7 @@ export default function SignIn() {
               />
             </View>
 
-            <View style={styles.footer}>
+            <View style={signinStyles.footer}>
               <Label size={14} secondary color="#666">
                 Don’t have an account?{" "}
               </Label>
@@ -156,40 +158,3 @@ export default function SignIn() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20, 
-  },
-  headerSection: {
-    marginBottom: 5,
-  },
-  logoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  headerLogo: {
-    width: 40,
-    height: 40,
-  },
-  pageTitle: {
-    fontFamily: "Comfortaa-Bold",
-    color: "#333",
-    marginBottom: 20,
-  },
-  form: {
-    marginBottom: 20,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-});

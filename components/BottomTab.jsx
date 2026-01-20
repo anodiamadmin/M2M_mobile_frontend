@@ -1,5 +1,6 @@
-import { View, Text, Pressable } from "react-native";
-import { Fonts } from "@theme/fonts";
+import Label from "@/components/Label";
+import { Colors } from "@/theme/colors";
+import { Pressable, View } from "react-native";
 
 export default function BottomTab({ label, active, onPress }) {
   return (
@@ -9,17 +10,16 @@ export default function BottomTab({ label, active, onPress }) {
           alignItems: "center",
           paddingVertical: 10,
           borderTopWidth: active ? 2 : 0,
-          borderTopColor: "#000",
+          borderTopColor: Colors.black,
         }}
       >
-        <Text
-          style={{
-            fontFamily: active ? Fonts.primaryBold : Fonts.primary,
-            fontSize: 12,
-          }}
+        <Label 
+          size={12} 
+          bold={active}
+          color={Colors.black}
         >
           {label}
-        </Text>
+        </Label>
       </View>
     </Pressable>
   );

@@ -1,7 +1,16 @@
 export const Colors = {
   primary: "#cb9bf0",
   secondary: "#506445",
+  accent: "#e9e0ff",
   black: "#000000",
-  white: "#ffffff",
-  accent: "#e9e0ff"
+  white: "#FFFFFF",
+  placeholderTextColor: "#999999",
+  activeBackground: "#E6F4FE",
+  inputBackground: "#E6E6FA",
+  surface: "#F0F0F8",
+  border: "#E8E8F0",
+  borderDark: "#cccccc",
+  tabInactive: "#8E8E93",
+  red: "#E53935",
+  success: "#34C759",
 };

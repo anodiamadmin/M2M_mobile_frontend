@@ -1,7 +1,7 @@
+import Label from "@/components/Label";
 import { StyleSheet, TextInput, View } from "react-native";
 import { Colors } from "../theme/colors";
 import { Fonts } from "../theme/fonts";
-import Label from "./Label";
 
 export default function TextField({
   label,
@@ -35,11 +35,11 @@ export default function TextField({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#999"
+        placeholderTextColor= {Colors.placeholderTextColor}
         secureTextEntry={secureTextEntry}
         style={[
           styles.input,
-          error && { borderColor: "red", borderWidth: 1 },
+          error && { borderColor: Colors.red, borderWidth: 1 },
           inputStyle 
         ]}
         {...props}
@@ -50,7 +50,7 @@ export default function TextField({
         <Label 
           secondary 
           size={12} 
-          style={{ color: "red", marginTop: 4, marginLeft: 10 }}
+          style={{ color: Colors.red, marginTop: 4, marginLeft: 10 }}
         >
           {error}
         </Label>
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-    backgroundColor: "#E6E6FA",
+    backgroundColor: Colors.inputBackground,
     borderRadius: 25, 
     paddingHorizontal: 20,
     fontSize: 16,

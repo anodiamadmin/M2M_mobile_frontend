@@ -1,12 +1,9 @@
-import Label from "@components/Label";
-import { Colors } from "@theme/colors";
 import { useRouter } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Animated, Image, StatusBar, View } from "react-native";
-
+import Label from "../components/Label";
 import { AuthContext } from "../context/AuthContext";
-
-// 1. Updated Import: No longer using 'as styles'
+import { Colors } from "../theme/colors";
 import { splashStyles } from "../utils/styles";
 
 export default function SplashScreen() {
@@ -39,7 +36,6 @@ export default function SplashScreen() {
   }, [authStatus, animationFinished]); 
 
   return (
-    // 2. Updated Usage: Changed 'styles.container' to 'splashStyles.container'
     <View style={splashStyles.container}> 
       <StatusBar barStyle="light-content" />
 
@@ -60,6 +56,7 @@ export default function SplashScreen() {
         </View>
 
         <View style={splashStyles.footerContainer}>
+          {/* Nested Labels allow different colors in one line */}
           <Label style={{ textAlign: 'center' }}>
             <Label size={24} bold secondary color={Colors.secondary}>Affordable</Label>
             <Label size={24} bold secondary color={Colors.primary}> Reliable</Label>

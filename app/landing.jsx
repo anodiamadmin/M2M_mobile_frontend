@@ -1,8 +1,7 @@
 import { useRouter } from "expo-router";
 import { useContext } from "react";
-import { Image, StatusBar, StyleSheet, View } from "react-native";
+import { Image, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import Button from "../components/Button";
 import Label from "../components/Label";
 import { AuthContext } from "../context/AuthContext";
@@ -12,19 +11,14 @@ import { landingStyles } from "../utils/styles";
 
 export default function Landing() {
   const router = useRouter();
-  
   const insets = useSafeAreaInsets();
-  
   const { authStatus } = useContext(AuthContext);
   const { setEntryIntent } = useContext(EntryIntentContext);
-
   const handleExplore = () => {
     router.replace("/(tabs)/explore");
   };
-
   const handleEntryAction = (intent) => {
     setEntryIntent(intent);
-
     if (authStatus === "AUTHENTICATED") {
       if (intent === "RENT") {
         router.replace("/(tabs)/my-rides/filter"); 
@@ -83,4 +77,3 @@ export default function Landing() {
     </View>
   );
 }
-

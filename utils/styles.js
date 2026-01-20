@@ -1,7 +1,6 @@
 import { Colors } from "@theme/colors";
 import { StyleSheet } from "react-native";
 
-// Export the object directly (Standard Practice)
 export const splashStyles = StyleSheet.create({
   container: {
     flex: 1,

@@ -40,8 +40,8 @@ npx ngrok http 8000
 ```
 to start ngrok secure tunnel for connecting to backend
 
-6. Copy *your-instance-id* from "https://your-instance-id.ngrok-free.app" you will get to see in the terminal.
+6. Copy the link "https://your-instance-id.ngrok-free.app" will get to see in the terminal.
 
-7. Paste the *your-instance-id* in `BASE_URL` of **services\apiClient.js**
+7. Paste the "https://your-instance-id.ngrok-free.app" in `BASE_URL` of **services\apiClient.js**
 
 # You are ready to connect!

@@ -13,4 +13,5 @@ export const Colors = {
   tabInactive: "#8E8E93",
   red: "#E53935",
   success: "#34C759",
+  transparent: "transparent",
 };

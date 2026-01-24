@@ -7,32 +7,41 @@ export default function Button({
   onPress,
   variant = "primary",
   style,
-  textSize = 20
+  textSize = 20,
+  disabled = false // Added this prop
 }) {
   const isSecondary = variant === "secondary";
   const isHyperlink = variant === "hyperlink";
   
   let backgroundColor = Colors.primary;
-  let borderColor = "transparent";
+  let borderColor = Colors.transparent;
   let borderWidth = 0;
   let textColor = Colors.white;
 
   if (isSecondary) {
-    backgroundColor = "transparent";
+    backgroundColor = Colors.transparent;
     borderColor = Colors.primary;
     borderWidth = 2;
     textColor = Colors.primary;
   } else if (isHyperlink) {
-    backgroundColor = "transparent";
-    borderColor = "transparent";
+    backgroundColor = Colors.transparent;
+    borderColor = Colors.transparent;
     borderWidth = 0;
     textColor = Colors.primary;
+  }
+
+  // UX FIX: Grey out button if disabled
+  if (disabled) {
+    backgroundColor = isHyperlink ? Colors.transparent : Colors.border;
+    borderColor = Colors.transparent;
+    textColor = Colors.tabInactive;
   }
 
   if (isHyperlink) {
     return (
       <TouchableOpacity
         onPress={onPress}
+        disabled={disabled} // Pass disabled prop
         activeOpacity={0.5}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={style}
@@ -53,6 +62,7 @@ export default function Button({
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled} // Pass disabled prop
       activeOpacity={0.8}
       style={[
         styles.container,

@@ -77,6 +77,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.secondary, 
     color: Colors.black,
     borderWidth: 1,
-    borderColor: "transparent", 
+    borderColor: Colors.transparent, 
   },
 });

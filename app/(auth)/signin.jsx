@@ -1,33 +1,22 @@
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import {
-  Alert,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { Alert, StyleSheet, View } from "react-native";
+import ActionRow from "../../components/ActionRow";
+import BrandLogo from "../../components/BrandLogo";
 import Button from "../../components/Button";
 import Label from "../../components/Label";
-import TextField from "../../components/TextField";
-import { Colors } from "../../theme/colors";
+import ScreenWrapper from "../../components/ScreenWrapper";
 
-import { authService } from "../../services/authService"; // 2. Import Service
+import EmailInput from "../../components/EmailInput";
+import PasswordInput from "../../components/PasswordInput";
 
 import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
-
-import { signinStyles } from "../../utils/styles";
+import { authService } from "../../services/authService";
 
 export default function SignIn() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   
   const { setAuthStatus } = useContext(AuthContext);
   const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
@@ -42,31 +31,25 @@ export default function SignIn() {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
-
     setLoading(true);
-
     try {
       await authService.login(email, password);
-      
       setAuthStatus("AUTHENTICATED");
 
+      // Redirect Logic
       if (tabIntent) {
         if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
         else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
         else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
         setTabIntent(null);
-      } 
-      else if (entryIntent) {
+      } else if (entryIntent) {
         if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
         else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
         setEntryIntent(null);
-      } 
-      else {
+      } else {
         router.replace("/(tabs)/explore"); 
       }
-
     } catch (error) {
-      console.log("Login Error:", error);
       const errorMessage = error.response?.data?.detail || "Invalid email or password";
       Alert.alert("Login Failed", errorMessage);
     } finally {
@@ -74,87 +57,63 @@ export default function SignIn() {
     }
   };
 
-  const navigateToSignUp = () => {
-    router.push("/(auth)/signup");
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={[
-        signinStyles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom }
-      ]}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === "ios" ? "padding" : undefined} 
-          style={{ flex: 1 }}
-        >
-          <View style={signinStyles.content}>
-          
-            <View style={signinStyles.headerSection}>
-              <View style={signinStyles.logoHeader}>
-                 <Image 
-                   source={require("../../assets/images/LogoLightNoNameNoBg.png")} 
-                   style={signinStyles.headerLogo}
-                   resizeMode="contain"
-                 />
-                 <Label size={20} bold color={Colors.primary}>
-                   micro2move
-                 </Label>
-              </View>
+    <ScreenWrapper mode="form" statusBar="dark">
+      <View style={styles.content}>
+        
+        <View style={styles.header}>
+          <BrandLogo style={styles.logo} />
+          <Label variant="heading">Sign in to continue</Label>
+        </View>
 
-              <Label size={24} bold style={signinStyles.pageTitle}>
-                Sign in to continue
-              </Label>
-            </View>
+        <View style={styles.form}>
+          <EmailInput 
+            value={email} 
+            onChangeText={setEmail} 
+            testID="emailTextInput"
+          />
+          <PasswordInput 
+            value={password} 
+            onChangeText={setPassword} 
+            testID="passwordTextInput"
+          />
+          <Button 
+            title={loading ? "Signing In..." : "Sign In"} 
+            variant="primary" 
+            onPress={handleSignIn} 
+            disabled={loading}
+            style={styles.signInButton}
+            testID="SignInButton"
+          />
+        </View>
 
-            <View style={signinStyles.form}>
-              <TextField
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter Email"
-                testID="emailTextInput"
-                keyboardType="email-address"
-                autoCapitalize="none" // Important for email input
-              />
+        <ActionRow 
+          text="Don’t have an account?"
+          actionText="Sign Up"
+          onActionPress={() => router.push("/(auth)/signup")}
+        />
 
-              <TextField
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholder="Enter Password"
-                testID="passwordTextInput"
-              />
-
-              <Button 
-                title={loading ? "Signing In..." : "Sign In"} // Update button text
-                variant="primary" 
-                onPress={handleSignIn} 
-                testID="SignInButton"
-                disabled={loading} // Disable button while loading
-                style={{ marginTop: 20 }}
-              />
-            </View>
-
-            <View style={signinStyles.footer}>
-              <Label size={14} secondary color="#666">
-                Don’t have an account?{" "}
-              </Label>
-              
-              <Button 
-                title="Sign Up"
-                variant="hyperlink"
-                onPress={navigateToSignUp}
-                textSize={14}
-                style={{ marginVertical: 0 }} 
-              />
-            </View>
-
-          </View>
-        </KeyboardAvoidingView>
       </View>
-    </TouchableWithoutFeedback>
+    </ScreenWrapper>
   );
 }
 
+const styles = StyleSheet.create({
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20, 
+  },
+  header: {
+    marginBottom: 30,
+  },
+  logo: {
+    marginBottom: 20,
+  },
+  form: {
+    marginBottom: 10,
+  },
+  signInButton: {
+    marginTop: 20
+  }
+});

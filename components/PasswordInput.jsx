@@ -18,7 +18,6 @@ export default function PasswordInput({
       onChangeText={onChangeText}
       error={error}
       placeholder={placeholder}
-      // DYNAMIC LOGIC
       secureTextEntry={!isVisible}
       rightIcon={isVisible ? "eye-off" : "eye"} 
       onRightIconPress={() => setIsVisible(!isVisible)}

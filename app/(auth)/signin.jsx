@@ -1,15 +1,13 @@
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import ActionRow from "../../components/ActionRow";
 import BrandLogo from "../../components/BrandLogo";
 import Button from "../../components/Button";
-import Label from "../../components/Label";
-import ScreenWrapper from "../../components/ScreenWrapper";
-
 import EmailInput from "../../components/EmailInput";
+import Label from "../../components/Label";
 import PasswordInput from "../../components/PasswordInput";
-
+import ScreenWrapper from "../../components/ScreenWrapper";
 import { AuthContext } from "../../context/AuthContext";
 import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
@@ -36,15 +34,14 @@ export default function SignIn() {
       await authService.login(email, password);
       setAuthStatus("AUTHENTICATED");
 
-      // Redirect Logic
       if (tabIntent) {
-        if (tabIntent === "RIDES") router.replace("/(tabs)/my-rides");
-        else if (tabIntent === "BIKES") router.replace("/(tabs)/my-bikes");
-        else if (tabIntent === "PROFILE") router.replace("/(tabs)/profile");
+        const target = tabIntent === "RIDES" ? "/(tabs)/my-rides" : 
+                       tabIntent === "BIKES" ? "/(tabs)/my-bikes" : "/(tabs)/profile";
+        router.replace(target);
         setTabIntent(null);
       } else if (entryIntent) {
-        if (entryIntent === "RENT") router.replace("/(tabs)/my-rides/filter");
-        else if (entryIntent === "LIST") router.replace("/(tabs)/my-bikes/list");
+        const target = entryIntent === "RENT" ? "/(tabs)/my-rides/filter" : "/(tabs)/my-bikes/list";
+        router.replace(target);
         setEntryIntent(null);
       } else {
         router.replace("/(tabs)/explore"); 
@@ -58,13 +55,16 @@ export default function SignIn() {
   };
 
   return (
-    <ScreenWrapper mode="form" statusBar="dark">
-      <View style={styles.content}>
+    <ScreenWrapper mode="scroll" statusBar="dark">
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled" 
+        keyboardDismissMode="on-drag"
+      >
         
-        <View style={styles.header}>
-          <BrandLogo style={styles.logo} />
-          <Label variant="heading">Sign in to continue</Label>
-        </View>
+        <BrandLogo />
+        <Label variant="heading">Sign in to continue</Label>
 
         <View style={styles.form}>
           <EmailInput 
@@ -77,6 +77,7 @@ export default function SignIn() {
             onChangeText={setPassword} 
             testID="passwordTextInput"
           />
+          
           <Button 
             title={loading ? "Signing In..." : "Sign In"} 
             variant="primary" 
@@ -93,22 +94,16 @@ export default function SignIn() {
           onActionPress={() => router.push("/(auth)/signup")}
         />
 
-      </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 20, 
-  },
-  header: {
-    marginBottom: 30,
-  },
-  logo: {
-    marginBottom: 20,
+    paddingTop: 20,
   },
   form: {
     marginBottom: 10,

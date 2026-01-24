@@ -3,7 +3,7 @@ import { Colors } from "../theme/colors";
 import Label from "./Label";
 
 export default function BrandLogo({ 
-  variant = "dark", // 'dark' (Purple text) | 'light' (White text)
+  variant = "dark", 
   showText = true,
   style 
 }) {
@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 10,
   },
   logo: {
     width: 50,

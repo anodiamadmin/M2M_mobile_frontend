@@ -6,13 +6,12 @@ export default function Checkbox({
   checked, 
   onPress, 
   style,
-  size = 22 // Default size from your code
+  size = 22
 }) {
   return (
     <TouchableOpacity 
       onPress={onPress}
       activeOpacity={0.7}
-      // HitSlop makes it easier to tap without increasing visual size
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} 
       style={[
         styles.base, 
@@ -36,7 +35,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   unchecked: {
-    backgroundColor: Colors.surface, // Your specific grey
+    backgroundColor: Colors.surface,
     borderColor: Colors.borderDark,
   },
   checked: {

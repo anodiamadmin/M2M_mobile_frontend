@@ -1,11 +1,11 @@
 import { StatusBar } from "expo-status-bar";
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    TouchableWithoutFeedback,
-    View
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../theme/colors";
@@ -15,13 +15,10 @@ export default function ScreenWrapper({
   style, 
   backgroundColor = Colors.white, 
   statusBar = "dark",  
-  mode = "default" // 'default' | 'form'
+  mode = "default"
 }) {
   const insets = useSafeAreaInsets();
 
-  // 1. The Safe Layout Container
-  // Logic: We apply padding manually so the background color fills the WHOLE screen (including notch),
-  // but the content stays inside the safe zone.
   const Container = ({ children }) => (
     <View style={[
       styles.container, 
@@ -34,13 +31,11 @@ export default function ScreenWrapper({
       },
       style
     ]}>
-      {/* Expo Status Bar handles Web/iOS/Android logic automatically */}
       <StatusBar style={statusBar} />
       {children}
     </View>
   );
 
-  // 2. Form Mode: Wraps in KeyboardAvoiding + Dismiss Logic
   if (mode === "form") {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -58,7 +53,6 @@ export default function ScreenWrapper({
     );
   }
 
-  // 3. Default Mode (Just Safe Area)
   return <Container>{children}</Container>;
 }
 

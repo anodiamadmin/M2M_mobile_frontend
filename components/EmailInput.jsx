@@ -14,7 +14,6 @@ export default function EmailInput({
       onChangeText={onChangeText}
       error={error}
       placeholder="Enter Email"
-      // LOCKING IN CORRECT SETTINGS
       keyboardType="email-address"
       autoCapitalize="none"
       autoCorrect={false}

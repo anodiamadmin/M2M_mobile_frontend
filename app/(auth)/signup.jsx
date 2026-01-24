@@ -18,23 +18,20 @@ import { EntryIntentContext } from "../../context/EntryIntentContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 import { authService } from "../../services/authService";
 import { Colors } from "../../theme/colors";
-import { isValidEmail } from "../../utils/validators";
+import { isAtLeast16, isValidEmail } from "../../utils/validators";
 
 export default function SignUp() {
   const router = useRouter();
   const { setAuthStatus } = useContext(AuthContext);
   const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
   const { tabIntent, setTabIntent } = useContext(TabIntentContext);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [dob, setDob] = useState(null);
   const [agreed, setAgreed] = useState(false);
-  
   const [profileImage, setProfileImage] = useState(null);
   const [idImage, setIdImage] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
@@ -47,11 +44,8 @@ export default function SignUp() {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
-    
-    // Age Check (16+)
-    const ageLimit = new Date();
-    ageLimit.setFullYear(ageLimit.getFullYear() - 16);
-    if (dob > ageLimit) {
+
+    if (!isAtLeast16(dob)) {
       Alert.alert("Age Restriction", "You must be at least 16 years old.");
       return;
     }
@@ -69,7 +63,6 @@ export default function SignUp() {
     setVerifying(true); 
 
     try {
-      // Simulate Verification
       await new Promise(resolve => setTimeout(resolve, 2000));
       setVerifying(false); 
 
@@ -132,10 +125,9 @@ export default function SignUp() {
         keyboardShouldPersistTaps="handled" 
         keyboardDismissMode="on-drag"
       >
-        <View style={styles.headerSection}>
-          <BrandLogo style={{ marginBottom: 5 }} />
-          <Label variant="heading">Sign up</Label>
-        </View>
+        
+        <BrandLogo />
+        <Label variant="heading">Sign up</Label>
 
         <View style={styles.form}>
           <TextField
@@ -150,6 +142,7 @@ export default function SignUp() {
             value={dob}
             onChange={setDob}
             placeholder="Select Your Date of Birth"
+            style={{ marginBottom: 15 }}
             inputStyle={{ 
               backgroundColor: Colors.inputBackground,
               borderColor: Colors.border
@@ -231,9 +224,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20, 
     paddingBottom: 40,
-  },
-  headerSection: {
-    marginBottom: 20, 
   },
   form: {
     marginBottom: 10,

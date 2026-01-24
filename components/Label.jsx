@@ -3,12 +3,12 @@ import { Colors } from "../theme/colors";
 import { Fonts } from "../theme/fonts";
 
 const VARIANTS = {
-  heading:    { size: 24, bold: true,  secondary: false }, // Page Titles
-  subheading: { size: 20, bold: true,  secondary: true },  // Section Headers
-  body:       { size: 16, bold: false, secondary: true },  // Standard Text
-  label:      { size: 14, bold: true,  secondary: true },  // Form Labels
-  caption:    { size: 12, bold: false, secondary: true },  // Helper text
-  small:      { size: 11, bold: false, secondary: true },  // Tiny details
+  heading:    { size: 24, bold: true,  secondary: false }, 
+  subheading: { size: 20, bold: true,  secondary: true },  
+  body:       { size: 16, bold: false, secondary: true },  
+  label:      { size: 14, bold: true,  secondary: true },  
+  caption:    { size: 12, bold: false, secondary: true },  
+  small:      { size: 11, bold: false, secondary: true },  
 };
 
 export default function Label({
@@ -39,6 +39,7 @@ export default function Label({
           fontFamily,
           fontSize: finalSize,
           color,
+          marginBottom: variant === 'heading' ? 20 : 0, 
         },
         style,
       ]}

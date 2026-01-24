@@ -8,7 +8,7 @@ export default function Button({
   variant = "primary",
   style,
   textSize = 20,
-  disabled = false // Added this prop
+  disabled = false
 }) {
   const isSecondary = variant === "secondary";
   const isHyperlink = variant === "hyperlink";
@@ -30,7 +30,6 @@ export default function Button({
     textColor = Colors.primary;
   }
 
-  // UX FIX: Grey out button if disabled
   if (disabled) {
     backgroundColor = isHyperlink ? Colors.transparent : Colors.border;
     borderColor = Colors.transparent;
@@ -41,7 +40,7 @@ export default function Button({
     return (
       <TouchableOpacity
         onPress={onPress}
-        disabled={disabled} // Pass disabled prop
+        disabled={disabled}
         activeOpacity={0.5}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={style}
@@ -62,7 +61,7 @@ export default function Button({
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled} // Pass disabled prop
+      disabled={disabled}
       activeOpacity={0.8}
       style={[
         styles.container,

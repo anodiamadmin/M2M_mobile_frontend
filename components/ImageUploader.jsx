@@ -15,7 +15,6 @@ export default function ImageUploader({
   
   const takePhoto = async () => {
     try {
-      // 1. Request Permission
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
       if (status !== 'granted') {
@@ -30,9 +29,7 @@ export default function ImageUploader({
         return;
       }
 
-      // 2. Launch Camera
       const result = await ImagePicker.launchCameraAsync({
-        // FIX: Use the raw string "Images" to prevent the 'undefined' crash
         mediaTypes: "Images", 
         allowsEditing: true,
         aspect: aspect,

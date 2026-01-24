@@ -1,22 +1,15 @@
 import { useRouter } from "expo-router";
 import { useContext } from "react";
 import { Image, StyleSheet, View } from "react-native";
-
-// Components
 import Button from "../components/Button";
 import Label from "../components/Label";
 import ScreenWrapper from "../components/ScreenWrapper";
-
-// Theme & Logic
 import { AuthContext } from "../context/AuthContext";
 import { EntryIntentContext } from "../context/EntryIntentContext";
 import { Colors } from "../theme/colors";
 
 export default function Landing() {
   const router = useRouter();
-  
-  // Note: No need for useSafeAreaInsets() here anymore!
-  
   const { authStatus } = useContext(AuthContext);
   const { setEntryIntent } = useContext(EntryIntentContext);
 
@@ -28,11 +21,8 @@ export default function Landing() {
     setEntryIntent(intent);
 
     if (authStatus === "AUTHENTICATED") {
-      if (intent === "RENT") {
-        router.replace("/(tabs)/my-rides/filter"); 
-      } else if (intent === "LIST") {
-        router.replace("/(tabs)/my-bikes/list"); 
-      }
+      const target = intent === "RENT" ? "/(tabs)/my-rides/filter" : "/(tabs)/my-bikes/list";
+      router.replace(target);
     } else {
       router.push("/(auth)/signin");
     }
@@ -41,13 +31,11 @@ export default function Landing() {
   return (
     <ScreenWrapper statusBar="dark">
       <View style={styles.container}>
-        
-        {/* Top Badge Section */}
-        <View style={styles.topSection}>
+        <View style={styles.heroSection}>
           <View style={styles.circleBadge}>
             <Image 
               source={require("../assets/images/SplashLogo.png")} 
-              style={styles.logo}
+              style={styles.heroLogo}
               resizeMode="contain"
             />
             <Label size={14} color={Colors.white} style={styles.tagline}>
@@ -56,7 +44,6 @@ export default function Landing() {
           </View>
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.actionContainer}>
           <Button 
             title="Rent a Bike" 
@@ -88,11 +75,9 @@ export default function Landing() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    // Note: Padding removed; ScreenWrapper handles safe area padding
   },
-  topSection: {
+  heroSection: {
     marginBottom: 60,
     alignItems: "center",
   },
@@ -105,31 +90,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
     elevation: 8,
   },
-  logo: {
-    width: 150,
-    height: 150,
-    transform: [{ scale: 1.8 }],
-    marginBottom: 10,
+  heroLogo: {
+    width: 200, 
+    height: 200,
+    marginBottom: 0,
   },
   tagline: {
     textAlign: "center",
     lineHeight: 20,
     opacity: 0.9,
+    marginTop: -10,
   },
   actionContainer: {
     width: "100%", 
-    paddingHorizontal: 24, 
-    alignItems: "center", 
+    paddingHorizontal: 24,
   },
   buttonSpacing: {
     marginBottom: 15,
   },
   exploreButton: {
     marginTop: 10,
+    alignSelf: 'center',
   },
 });

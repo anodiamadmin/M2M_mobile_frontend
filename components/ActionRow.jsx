@@ -8,21 +8,18 @@ export default function ActionRow({
   actionText, 
   onActionPress, 
   style,
-  size = 14 // <--- Default is 14, but you can override it now
+  size = 14
 }) {
   return (
     <View style={[styles.container, style]}>
-      {/* 1. The Helper Text */}
       <Label variant="body" size={size} color={Colors.tabInactive}>
         {text}{" "}
       </Label>
-      
-      {/* 2. The Action Link */}
       <Button 
         title={actionText}
         variant="hyperlink"
         onPress={onActionPress}
-        textSize={size} // <--- Passing the size down
+        textSize={size}
         style={{ marginVertical: 0, paddingHorizontal: 0 }} 
       />
     </View>

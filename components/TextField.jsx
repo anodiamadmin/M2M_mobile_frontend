@@ -45,7 +45,6 @@ export default function TextField({
         {...props}
       />
 
-      {/* 3. Error Message */}
       {error && (
         <Label 
           secondary 

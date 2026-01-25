@@ -2,8 +2,6 @@ import axios from 'axios';
 import { authService } from '../services/authService';
 
 // --- MOCK AXIOS ---
-// We define the structure INSIDE the factory.
-// We capture BOTH request and response interceptors into stateful properties.
 jest.mock('axios', () => {
   return {
     create: jest.fn(() => {
@@ -13,13 +11,11 @@ jest.mock('axios', () => {
         interceptors: {
           request: { 
             use: jest.fn((successFn, errorFn) => {
-              // Capture REQUEST handlers
               instance.__requestHandlers = { success: successFn, error: errorFn };
             }) 
           },
           response: { 
             use: jest.fn((successFn, errorFn) => {
-              // Capture RESPONSE handlers
               instance.__responseHandlers = { success: successFn, error: errorFn };
             }) 
           },
@@ -40,9 +36,7 @@ describe('Services', () => {
     // 1. Force execution of apiClient
     try {
       require('../services/apiClient');
-    } catch (e) {
-      // Ignore if already imported
-    }
+    } catch (e) {}
 
     // 2. Retrieve the mock instance
     if (axios.create.mock.results.length > 0) {
@@ -51,8 +45,14 @@ describe('Services', () => {
     }
   });
 
+  // ✅ Clean up mocks between tests in this file
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  // ✅ Clean up module cache so we don't break other test files
+  afterAll(() => {
+    jest.resetModules();
   });
 
   // --- AUTH SERVICE TESTS ---
@@ -73,16 +73,9 @@ describe('Services', () => {
     it('register() calls the correct endpoint with user data', async () => {
         const mockResponse = { data: { success: true } };
         mockPost.mockResolvedValue(mockResponse);
-
-        const userData = {
-          full_name: 'John Doe',
-          email: 'john@test.com',
-          password: 'pass',
-          dob: '2000-01-01'
-        };
+        const userData = { full_name: 'John', email: 'j@t.com', password: 'p', dob: 'd' };
 
         await authService.register(userData.full_name, userData.email, userData.password, userData.dob);
-        
         expect(mockPost).toHaveBeenCalledWith('/auth/signup', expect.any(Object)); 
     });
 
@@ -104,36 +97,33 @@ describe('Services', () => {
 
   // --- API CLIENT INTERCEPTOR TEST ---
   describe('apiClient Interceptors', () => {
-    
-    // ✅ TEST THE REQUEST INTERCEPTOR (Covering lines 18-28)
     it('configures request interceptor to process config', async () => {
        const handlers = mockAxiosInstance.__requestHandlers;
-       
-       // Verify the request interceptor exists
        expect(handlers).toBeDefined();
-       expect(handlers.success).toBeInstanceOf(Function);
-
-       // Execute the success handler (this runs the code on lines 18-28)
+       
        const mockConfig = { headers: {}, method: 'get', url: '/test' };
        const result = await handlers.success(mockConfig);
-
-       // Expect it to return the config (or modified config)
        expect(result).toBeDefined();
-       // You can add more expectations here if your interceptor adds tokens, etc.
-       // e.g. expect(result.headers.Authorization).toBeDefined(); 
     });
 
-    // TEST THE RESPONSE INTERCEPTOR (If it exists)
+    it('configures request interceptor to handle errors', async () => {
+      const handlers = mockAxiosInstance.__requestHandlers;
+      if (handlers && handlers.error) {
+        const error = new Error('Request Config Error');
+        try {
+          await handlers.error(error);
+        } catch (e) {
+          expect(e).toBe(error);
+        }
+      }
+    });
+
     it('configures response interceptor to handle errors', async () => {
        const handlers = mockAxiosInstance.__responseHandlers;
-
-       // Only run this check if a response interceptor was actually defined
        if (handlers) {
-         // Test Success Path
          const response = { data: 'ok' };
          expect(handlers.success(response)).toBe(response);
 
-         // Test Error Path
          const error = { response: { status: 500 } };
          try {
            await handlers.error(error);

@@ -6,7 +6,6 @@ import { AuthStatus } from '../constants/types';
 import { AuthContext, AuthProvider } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
-// --- MOCKS ---
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
   deleteItemAsync: jest.fn(),
@@ -31,11 +30,9 @@ const TestConsumer = () => {
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    // We use resetAllMocks to ensure no state leaks between tests
     jest.resetAllMocks(); 
   });
 
-  // ✅ FIX 1: Added a 15000ms (15s) timeout as the 3rd argument to 'it'
   it('initializes as UNKNOWN then becomes AUTHENTICATED if token exists', async () => {
     SecureStore.getItemAsync.mockResolvedValue('valid-token');
 
@@ -47,12 +44,11 @@ describe('AuthContext', () => {
 
     expect(getByTestId('status').props.children).toBe(AuthStatus.UNKNOWN);
 
-    // ✅ FIX 2: Kept the waitFor timeout aligned
     await waitFor(() => {
       expect(getByTestId('status').props.children).toBe(AuthStatus.AUTHENTICATED);
     }, { timeout: 10000 });
 
-  }, 15000); // <--- THIS NUMBER PREVENTS THE "Exceeded timeout" ERROR
+  }, 15000);
 
   it('initializes as UNKNOWN then becomes UNAUTHENTICATED if no token exists', async () => {
     SecureStore.getItemAsync.mockResolvedValue(null);
@@ -105,27 +101,54 @@ describe('AuthContext', () => {
     expect(getByTestId('status').props.children).toBe(AuthStatus.UNAUTHENTICATED);
   });
 
-  it('logout() proceeds safely if authService.logout is undefined (Branch Coverage)', async () => {
+  it('logout() logs error on backend failure but proceeds to clear session', async () => {
     SecureStore.getItemAsync.mockResolvedValue('valid-token');
-    
-    const originalLogout = authService.logout;
-    authService.logout = undefined;
-
+    const mockError = new Error('Network Error');
+    authService.logout.mockRejectedValue(mockError);
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const { getByTestId } = render(
       <AuthProvider>
         <TestConsumer />
       </AuthProvider>
     );
-
     await waitFor(() => expect(getByTestId('status').props.children).toBe(AuthStatus.AUTHENTICATED));
-
     await act(async () => {
       fireEvent.press(getByTestId('logout-btn'));
     });
-
+    expect(consoleSpy).toHaveBeenCalledWith("Backend logout ignored:", mockError);
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('user_token');
     expect(getByTestId('status').props.children).toBe(AuthStatus.UNAUTHENTICATED);
+    consoleSpy.mockRestore();
+  });
 
+  it('logout() proceeds safely if authService.logout is undefined (Branch Coverage)', async () => {
+    SecureStore.getItemAsync.mockResolvedValue('valid-token');
+    const originalLogout = authService.logout;
+    authService.logout = undefined;
+    const { getByTestId } = render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+    await waitFor(() => expect(getByTestId('status').props.children).toBe(AuthStatus.AUTHENTICATED));
+    await act(async () => {
+      fireEvent.press(getByTestId('logout-btn'));
+    });
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('user_token');
+    expect(getByTestId('status').props.children).toBe(AuthStatus.UNAUTHENTICATED);
     authService.logout = originalLogout;
+  });
+
+  it('uses default context values when used outside of a provider', async () => {
+    let contextValues;
+    const TestComponent = () => {
+       contextValues = useContext(AuthContext);
+       return null;
+    };    
+    render(<TestComponent />);
+    expect(contextValues.authStatus).toBe(AuthStatus.UNKNOWN);
+    contextValues.setAuthStatus();
+    await contextValues.logout();
+    expect(true).toBe(true);
   });
 });

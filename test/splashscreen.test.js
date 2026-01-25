@@ -4,7 +4,6 @@ import SplashScreenComponent from '../app/splash';
 import { AuthStatus } from '../constants/types';
 import { AuthContext } from '../context/AuthContext';
 
-// Mocks
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(),
   hideAsync: jest.fn(),
@@ -33,7 +32,6 @@ describe('Splash Screen', () => {
   let consoleSpy;
 
   beforeAll(() => {
-    // 1. Silence console.warn globally for this suite
     consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -73,23 +71,18 @@ describe('Splash Screen', () => {
 
   it('Error Path: Handles native splash error gracefully', async () => {
     SplashScreen.hideAsync.mockRejectedValue(new Error("Native Failure"));
-    
     const { getByTestId } = renderWithAuth(AuthStatus.UNAUTHENTICATED);
-
     const image = getByTestId('splash-image');
     await act(async () => {
       image.props.onLoad();
     });
 
-    // Verify the spy was called (Caught the error)
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
     });
-
     act(() => {
       jest.advanceTimersByTime(2000);
     });
-
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/landing');
     });
@@ -97,16 +90,13 @@ describe('Splash Screen', () => {
 
   it('Waits indefinitely if AuthStatus is UNKNOWN', async () => {
     const { getByTestId } = renderWithAuth(AuthStatus.UNKNOWN);
-
     const image = getByTestId('splash-image');
     await act(async () => {
       image.props.onLoad();
     });
-
     act(() => {
       jest.advanceTimersByTime(2000);
     });
-
     expect(mockReplace).not.toHaveBeenCalled();
   });
 });

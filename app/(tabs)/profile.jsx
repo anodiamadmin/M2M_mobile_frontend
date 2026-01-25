@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { useContext } from "react";
 import { StyleSheet, View } from "react-native";
-
 import Button from "../../components/Button";
 import Label from "../../components/Label";
 import ScreenWrapper from "../../components/ScreenWrapper";
@@ -10,15 +9,9 @@ import { Colors } from "../../theme/colors";
 
 export default function Profile() {
   const router = useRouter();
-  
-  // Destructure the new 'logout' function
   const { logout } = useContext(AuthContext);
-
   const handleLogout = async () => {
     await logout();
-    // The Context changes authStatus -> "UNAUTHENTICATED"
-    // The Root Layout (app/_layout.jsx) should observe this and redirect, 
-    // but explicit replace ensures it happens instantly.
     router.replace("/landing");
   };
 
@@ -29,8 +22,6 @@ export default function Profile() {
           Profile
         </Label>
 
-        {/* Note: Your Button component doesn't technically support iconLeft yet 
-            based on previous code, but I'll keep the logic simple here. */}
         <Button
           title="Logout"
           variant="primary"
@@ -50,8 +41,8 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
   },
   logoutButton: {
-    backgroundColor: Colors.red, // Red for danger action
+    backgroundColor: Colors.red,
     width: 160, 
-    borderColor: Colors.red, // Ensure border matches if variant logic adds one
+    borderColor: Colors.red,
   },
 });

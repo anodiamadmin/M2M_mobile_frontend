@@ -6,8 +6,6 @@ import { AuthContext } from '../context/AuthContext';
 import { useIntent } from '../hooks/useIntent';
 import { authService } from '../services/authService';
 
-// --- MOCKS ---
-
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
@@ -16,7 +14,6 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-// Mock Hooks
 jest.mock('../hooks/useIntent', () => ({
   useIntent: jest.fn(), 
 }));
@@ -27,11 +24,10 @@ jest.mock('../services/authService', () => ({
   authService: { login: jest.fn() },
 }));
 
-// --- MOCK UI COMPONENTS (Prevents Rendering Crashes) ---
 jest.mock('../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
 jest.mock('../components/BrandLogo', () => 'BrandLogo');
 jest.mock('../components/Label', () => 'Label');
-jest.mock('../components/TextField', () => 'TextField'); // For generic text fields if any
+jest.mock('../components/TextField', () => 'TextField');
 jest.mock('../components/EmailInput', () => {
   const { TextInput } = require('react-native');
   return (props) => <TextInput {...props} />;
@@ -41,7 +37,6 @@ jest.mock('../components/PasswordInput', () => {
   return (props) => <TextInput {...props} />;
 });
 
-// Mock Button/ActionRow to be interactive
 jest.mock('../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ title, onPress, testID, disabled }) => (
@@ -149,6 +144,5 @@ describe('SignIn Screen', () => {
     );
     
     fireEvent.press(getByText("Sign Up"));
-    // Navigation is handled by router mock, we verify ActionRow renders and is clickable
-  });
+    });
 });

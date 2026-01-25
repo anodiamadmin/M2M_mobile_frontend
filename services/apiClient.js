@@ -14,7 +14,6 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   async (config) => {
-    // console.log(`[API REQUEST] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
     try {
       const token = await SecureStore.getItemAsync('user_token');
       if (token) {

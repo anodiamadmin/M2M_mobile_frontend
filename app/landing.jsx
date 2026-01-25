@@ -3,15 +3,12 @@ import { Image, StyleSheet, View } from "react-native";
 import Button from "../components/Button";
 import Label from "../components/Label";
 import ScreenWrapper from "../components/ScreenWrapper";
-import { useIntent } from "../hooks/useIntent"; // <--- Hook Import
+import { useIntent } from "../hooks/useIntent";
 import { Colors } from "../theme/colors";
 
 export default function Landing() {
   const router = useRouter();
-  
-  // ✅ REFACTORED: Use the hook to handle the "Smart Logic"
   const { setRentIntent, setListIntent } = useIntent();
-
   const handleExplore = () => {
     router.replace("/(tabs)/explore");
   };
@@ -36,14 +33,14 @@ export default function Landing() {
           <Button 
             title="Rent a Bike" 
             variant="primary"
-            onPress={setRentIntent} // <--- Clean
+            onPress={setRentIntent}
             style={styles.buttonSpacing}
           />
 
           <Button 
             title="List a Bike" 
             variant="primary"
-            onPress={setListIntent} // <--- Clean
+            onPress={setListIntent}
             style={styles.buttonSpacing}
           />
 

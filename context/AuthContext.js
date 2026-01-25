@@ -1,25 +1,25 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useEffect, useState } from "react";
-import { AuthStatus } from "../constants/types"; // <--- 1. IMPORT THIS
+import { AuthStatus } from "../constants/types";
 import { authService } from "../services/authService";
 
 export const AuthContext = createContext({
-  authStatus: AuthStatus.UNKNOWN, // <--- 2. USE IT HERE
+  authStatus: AuthStatus.UNKNOWN,
   setAuthStatus: () => {},
   logout: async () => {}, 
 });
 
 export function AuthProvider({ children }) {
-  const [authStatus, setAuthStatus] = useState(AuthStatus.UNKNOWN); // <--- 3. USE IT HERE
+  const [authStatus, setAuthStatus] = useState(AuthStatus.UNKNOWN);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const token = await SecureStore.getItemAsync('user_token');
         if (token) {
-          setAuthStatus(AuthStatus.AUTHENTICATED); // <--- 4. AND HERE
+          setAuthStatus(AuthStatus.AUTHENTICATED);
         } else {
-          setAuthStatus(AuthStatus.UNAUTHENTICATED); // <--- 5. AND HERE
+          setAuthStatus(AuthStatus.UNAUTHENTICATED);
         }
       } catch (e) {
         console.error("Auth check failed:", e);
@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
 
     await SecureStore.deleteItemAsync('user_token');
 
-    setAuthStatus(AuthStatus.UNAUTHENTICATED); // <--- 6. AND HERE
+    setAuthStatus(AuthStatus.UNAUTHENTICATED);
   };
 
   return (

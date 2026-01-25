@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useContext } from "react";
-import { Pressable } from "react-native"; // 1. Import Pressable & Platform
+import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { AuthContext } from "../../context/AuthContext";
 import { TabIntentContext } from "../../context/TabIntentContext";
 import { Colors } from "../../theme/colors";
+import { Fonts } from "../../theme/fonts";
 
 export default function TabsLayout() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function TabsLayout() {
       screenOptions={{ 
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: "#8E8E93",
+        tabBarInactiveTintColor: Colors.tabInactive,
         tabBarStyle: {
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom + 5,
@@ -36,20 +36,16 @@ export default function TabsLayout() {
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontFamily: "Lato-Regular",
+          fontFamily: Fonts.secondary,
         },
-        // 2. ADD THIS: Custom Tab Button for Click Effect
         tabBarButton: (props) => (
           <Pressable
             {...props}
-            // Android: Adds the material ripple effect
-            android_ripple={{ color: "#E6F4FE", borderless: true, radius: 50 }}
-            // iOS & Android: Adds opacity fade on press
+            android_ripple={{ color: Colors.activeBackground, borderless: true, radius: 50 }}
             style={({ pressed }) => [
               props.style,
               { 
                 opacity: pressed ? 0.5 : 1,
-                // Optional: Subtle scale down animation
                 transform: [{ scale: pressed ? 0.96 : 1 }] 
               }
             ]}

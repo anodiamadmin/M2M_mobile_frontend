@@ -1,25 +1,18 @@
 import { render } from '@testing-library/react-native';
 import { Keyboard, Platform, Text } from 'react-native';
-
-// Components
 import BrandLogo from '../components/BrandLogo';
-import EmailInput from '../components/EmailInput'; // <--- 1. IMPORT ADDED
+import EmailInput from '../components/EmailInput';
 import Label from '../components/Label';
 import PasswordInput from '../components/PasswordInput';
 import ScreenWrapper from '../components/ScreenWrapper';
 import TextField from '../components/TextField';
-
-// Theme
 import { Colors } from '../theme/colors';
 import { Fonts } from '../theme/fonts';
-
-// --- MOCKS ---
 
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 10, bottom: 10, left: 0, right: 0 }),
 }));
 
-// ✅ 2. RESTORED MOCK: Required for ScreenWrapper to render without crashing
 jest.mock('expo-status-bar', () => ({
   StatusBar: () => null,
 }));
@@ -37,9 +30,6 @@ jest.spyOn(Keyboard, 'dismiss');
 
 describe('Shared Components', () => {
 
-  // ------------------------------------------------------------------
-  // 1. LABEL COMPONENT TESTS
-  // ------------------------------------------------------------------
   describe('Label', () => {
     it('renders with default styles (Primary Regular, Size 14) when no props provided', () => {
       const { getByText } = render(<Label>Default Text</Label>);
@@ -54,7 +44,6 @@ describe('Shared Components', () => {
     it('renders heading variant (Primary Bold, Size 24)', () => {
       const { getByText } = render(<Label variant="heading">Heading</Label>);
       const label = getByText('Heading');
-      
       const styles = label.props.style[0];
       expect(styles.fontSize).toBe(24);
       expect(styles.fontFamily).toBe(Fonts.primaryBold); 
@@ -63,8 +52,7 @@ describe('Shared Components', () => {
 
     it('renders body variant (Secondary Regular, Size 16)', () => {
       const { getByText } = render(<Label variant="body">Body Text</Label>);
-      const label = getByText('Body Text');
-      
+      const label = getByText('Body Text'); 
       const styles = label.props.style[0];
       expect(styles.fontSize).toBe(16);
       expect(styles.fontFamily).toBe(Fonts.secondary); 
@@ -77,7 +65,6 @@ describe('Shared Components', () => {
         </Label>
       );
       const label = getByText('Override');
-      
       const styles = label.props.style[0];
       expect(styles.fontSize).toBe(30); 
       expect(styles.fontFamily).toBe(Fonts.secondaryBold); 
@@ -94,9 +81,6 @@ describe('Shared Components', () => {
     });
   });
 
-  // ------------------------------------------------------------------
-  // 2. TEXTFIELD COMPONENT TESTS
-  // ------------------------------------------------------------------
   describe('TextField', () => {
     it('displays error message and applies red border when error prop is set', () => {
       const { getByText, getByTestId } = render(
@@ -107,12 +91,9 @@ describe('Shared Components', () => {
           error="Invalid Email Address" 
         />
       );
-
       expect(getByText('Invalid Email Address')).toBeTruthy();
-
       const input = getByTestId('error-input');
       const flatStyle = input.props.style.reduce((acc, curr) => ({ ...acc, ...curr }), {});
-      
       expect(flatStyle.borderColor).toBe(Colors.red);
       expect(flatStyle.borderWidth).toBe(1);
     });
@@ -125,7 +106,6 @@ describe('Shared Components', () => {
           maxLength={10} 
         />
       );
-
       const input = getByTestId('custom-input');
       const flatStyle = input.props.style.reduce((acc, curr) => ({ ...acc, ...curr }), {});
       expect(flatStyle.backgroundColor).toBe('yellow');
@@ -133,9 +113,6 @@ describe('Shared Components', () => {
     });
   });
 
-  // ------------------------------------------------------------------
-  // 3. BRANDLOGO COMPONENT TESTS
-  // ------------------------------------------------------------------
   describe('BrandLogo', () => {
     it('renders with PRIMARY color when variant is default (dark)', () => {
       const { getByText } = render(<BrandLogo />);
@@ -155,9 +132,6 @@ describe('Shared Components', () => {
     });
   });
 
-  // ------------------------------------------------------------------
-  // 4. PASSWORDINPUT COMPONENT TESTS
-  // ------------------------------------------------------------------
   describe('PasswordInput', () => {
     it('renders with secure text entry enabled by default', () => {
       const { getByPlaceholderText } = render(
@@ -167,16 +141,11 @@ describe('Shared Components', () => {
           onChangeText={() => {}} 
         />
       );
-
       const input = getByPlaceholderText('Enter Password');
       expect(input.props.secureTextEntry).toBe(true);
     });
   });
 
-  // ------------------------------------------------------------------
-  // 5. EMAILINPUT COMPONENT TESTS
-  // ------------------------------------------------------------------
-  // ✅ 3. NEW TEST SUITE ADDED
   describe('EmailInput', () => {
     it('renders with correct keyboard type and auto-capitalization', () => {
       const { getByPlaceholderText } = render(
@@ -186,10 +155,7 @@ describe('Shared Components', () => {
           placeholder="Enter Email"
         />
       );
-
       const input = getByPlaceholderText('Enter Email');
-      
-      // Verify specific email UX properties
       expect(input.props.keyboardType).toBe('email-address');
       expect(input.props.autoCapitalize).toBe('none');
     });
@@ -202,15 +168,11 @@ describe('Shared Components', () => {
           onChangeText={() => {}} 
         />
       );
-      
       const input = getByTestId('email-input');
       expect(input).toBeTruthy();
     });
   });
 
-  // ------------------------------------------------------------------
-  // 6. SCREENWRAPPER COMPONENT TESTS
-  // ------------------------------------------------------------------
   describe('ScreenWrapper', () => {
     it('renders standard view when mode is default', () => {
       const { getByText } = render(

@@ -6,12 +6,9 @@ import { AuthStatus } from '../constants/types';
 import { authService } from '../services/authService';
 import { isAtLeast16, isValidEmail } from '../utils/validators';
 
-// --- GLOBAL SPIES ---
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 const mockResolveIntent = jest.fn();
-
-// --- MOCKS ---
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn() }),
@@ -37,8 +34,6 @@ jest.mock('../utils/validators', () => ({
   isAtLeast16: jest.fn(),
   isValidEmail: jest.fn(),
 }));
-
-// --- UI MOCKS ---
 
 jest.mock('../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
@@ -94,7 +89,6 @@ const renderWithContext = (component, contextOverrides = {}) => {
   );
 };
 
-// --- TEST SUITE ---
 describe('<SignUp /> Integration', () => {
   let consoleSpy;
 
@@ -110,8 +104,6 @@ describe('<SignUp /> Integration', () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert');
     jest.useFakeTimers(); 
-    
-    // Default: Validators Pass
     isAtLeast16.mockReturnValue(true);
     isValidEmail.mockReturnValue(true);
     authService.register.mockResolvedValue({ access_token: 'fake-jwt' });
@@ -131,8 +123,6 @@ describe('<SignUp /> Integration', () => {
     fireEvent.press(getByTestId('termsCheckbox'));
   };
 
-  // --- VALIDATION TESTS ---
-  
   it('shows error if fields are missing', () => {
     const { getByTestId } = renderWithContext(<SignUp />);
     fireEvent.press(getByTestId('signUpButton'));
@@ -170,13 +160,10 @@ describe('<SignUp /> Integration', () => {
   it('shows error if terms not accepted', () => {
     const { getByTestId } = renderWithContext(<SignUp />);
     fillForm(getByTestId); 
-    fireEvent.press(getByTestId('termsCheckbox')); // Unchecks it
-    
+    fireEvent.press(getByTestId('termsCheckbox'));
     fireEvent.press(getByTestId('signUpButton'));
     expect(Alert.alert).toHaveBeenCalledWith("Terms Required", expect.anything());
   });
-
-  // --- NAVIGATION TESTS ---
 
   it('navigates to Terms screen', () => {
     const { getByText } = renderWithContext(<SignUp />);
@@ -190,20 +177,14 @@ describe('<SignUp /> Integration', () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
-  // --- ERROR HANDLING & SUCCESS TESTS ---
-
   it('handles unexpected errors during verification phase', async () => {
     const { getByTestId } = renderWithContext(<SignUp />);
     fillForm(getByTestId);
-
     Alert.alert.mockImplementationOnce(() => {
       throw new Error("Simulation Crash");
     });
-
     fireEvent.press(getByTestId('signUpButton'));
-
     act(() => { jest.advanceTimersByTime(2000); });
-
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith("Error:", expect.any(Error));
     });
@@ -213,24 +194,18 @@ describe('<SignUp /> Integration', () => {
     authService.register.mockRejectedValue({
       response: { data: { detail: "Email already in use" } }
     });
-
     const { getByTestId } = renderWithContext(<SignUp />);
     fillForm(getByTestId);
     fireEvent.press(getByTestId('signUpButton'));
-
     act(() => { jest.advanceTimersByTime(2000); });
-
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
     });
-    
     const alertButtons = Alert.alert.mock.calls[0][2];
     const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
-    
     await act(async () => {
       await createAccountBtn.onPress();
     });
-
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith("Error", "Email already in use");
     });
@@ -238,52 +213,37 @@ describe('<SignUp /> Integration', () => {
 
   it('handles generic registration failure', async () => {
     authService.register.mockRejectedValue(new Error("Network Error"));
-
     const { getByTestId } = renderWithContext(<SignUp />);
     fillForm(getByTestId);
     fireEvent.press(getByTestId('signUpButton'));
-
     act(() => { jest.advanceTimersByTime(2000); });
-
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
-    });
-    
+    }); 
     const alertButtons = Alert.alert.mock.calls[0][2];
     const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
-    
     await act(async () => {
       await createAccountBtn.onPress();
     });
-
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith("Error", "Registration failed.");
     });
   });
 
-  // ✅ NEW TEST CASE: COVERS THE "ELSE" (Missing Token) BRANCH
   it('handles registration success but missing access_token (Uncovered Branch)', async () => {
-    // Return success but NO token
     authService.register.mockResolvedValue({ success: true }); 
-
     const { getByTestId } = renderWithContext(<SignUp />);
     fillForm(getByTestId);
     fireEvent.press(getByTestId('signUpButton'));
-
     act(() => { jest.advanceTimersByTime(2000); });
-
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
-    });
-    
+    }); 
     const alertButtons = Alert.alert.mock.calls[0][2];
-    const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
-    
+    const createAccountBtn = alertButtons.find(b => b.text === "Create Account");  
     await act(async () => {
       await createAccountBtn.onPress();
     });
-
-    // We expect NO navigation and NO secure store save because the token was missing
     await waitFor(() => {
       expect(authService.register).toHaveBeenCalled();
       expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
@@ -294,22 +254,17 @@ describe('<SignUp /> Integration', () => {
   it('successfully registers, saves token, and resolves intent', async () => {
     const setAuthStatusSpy = jest.fn();
     const { getByTestId } = renderWithContext(<SignUp />, { setAuthStatus: setAuthStatusSpy });
-    
     fillForm(getByTestId);
     fireEvent.press(getByTestId('signUpButton'));
-
     act(() => { jest.advanceTimersByTime(2000); });
-
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
     });
-    
     const alertButtons = Alert.alert.mock.calls[0][2];
     const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
     await act(async () => {
       await createAccountBtn.onPress();
     });
-    
     await waitFor(() => {
       expect(authService.register).toHaveBeenCalled();
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith('user_token', 'fake-jwt');

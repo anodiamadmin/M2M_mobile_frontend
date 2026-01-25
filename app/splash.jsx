@@ -1,47 +1,61 @@
 import { useRouter } from "expo-router";
-import { useContext, useEffect, useRef, useState } from "react";
-import { Animated, Image, StyleSheet, View } from "react-native";
+import * as SplashScreen from 'expo-splash-screen';
+import { useContext, useEffect, useState } from "react";
+import { Image, StyleSheet, View } from "react-native";
 
 // Components
 import Label from "../components/Label";
 import ScreenWrapper from "../components/ScreenWrapper";
 
 // Theme & Logic
+import { AuthStatus } from "../constants/types";
 import { AuthContext } from "../context/AuthContext";
 import { Colors } from "../theme/colors";
 
-export default function SplashScreen() {
+// 1. TELL NATIVE SPLASH TO WAIT
+// This keeps the native launch image visible until we explicitly hide it.
+SplashScreen.preventAutoHideAsync();
+
+export default function SplashScreenComponent() {
   const router = useRouter();
   const { authStatus } = useContext(AuthContext);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [animationFinished, setAnimationFinished] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
 
-  const onImageLoaded = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800, 
-      useNativeDriver: true,
-    }).start();
-
-    setTimeout(() => {
-      setAnimationFinished(true);
-    }, 3000);
+  // 2. THE HANDOFF
+  // This runs when the Image component has finished decoding the bitmap.
+  const onImageLoaded = async () => {
+    try {
+      // The image is ready. Hide the native splash.
+      // The user now sees this React screen, which looks identical.
+      await SplashScreen.hideAsync();
+      
+      // Start a small timer to show the "Tagline" and "Footer" 
+      // before navigating (optional, but looks nice).
+      setTimeout(() => {
+        setIsAppReady(true);
+      }, 2000); 
+    } catch (e) {
+      console.warn(e);
+      setIsAppReady(true); // Fallback
+    }
   };
 
   useEffect(() => {
-    if (!animationFinished) return;
-    if (authStatus === "UNKNOWN") return;
+    if (!isAppReady) return;
+    
+    // 3. AUTH LOGIC
+    if (authStatus === AuthStatus.UNKNOWN) return;
 
-    if (authStatus === "AUTHENTICATED") {
+    if (authStatus === AuthStatus.AUTHENTICATED) {
       router.replace("/(tabs)/explore");
     } else {
       router.replace("/landing");
     }
-  }, [authStatus, animationFinished]); 
+  }, [authStatus, isAppReady]); 
 
   return (
     <ScreenWrapper backgroundColor={Colors.black} statusBar="light">
-      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
+      <View style={styles.contentContainer}>
         
         {/* Top Tagline */}
         <View style={styles.topSection}>
@@ -56,7 +70,8 @@ export default function SplashScreen() {
             source={require("../assets/images/SplashLogo.png")} 
             style={styles.logo}
             resizeMode="contain"
-            onLoad={onImageLoaded}
+            // This triggers the handoff
+            onLoad={onImageLoaded} 
           />
         </View>
 
@@ -69,13 +84,12 @@ export default function SplashScreen() {
           </Label>
         </View>
 
-      </Animated.View>
+      </View>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  // Note: 'container' style removed; ScreenWrapper handles flex:1 and bg color
   contentContainer: {
     flex: 1,
     alignItems: "center",
@@ -88,11 +102,13 @@ const styles = StyleSheet.create({
   logoContainer: {
     justifyContent: "center",
     alignItems: "center",
+    width: "100%", 
   },
   logo: {
-    width: 250,
-    height: 250,
-    transform: [{ scale: 1.8 }],
+    // Responsive sizing logic we discussed
+    width: "85%",        
+    aspectRatio: 1,      
+    maxHeight: 450,      
   },
   footerContainer: {
     marginBottom: 40,

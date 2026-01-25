@@ -8,17 +8,16 @@ import EmailInput from "../../components/EmailInput";
 import Label from "../../components/Label";
 import PasswordInput from "../../components/PasswordInput";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { AuthStatus } from "../../constants/types"; // Optional: Use Enum for setting status
 import { AuthContext } from "../../context/AuthContext";
-import { EntryIntentContext } from "../../context/EntryIntentContext";
-import { TabIntentContext } from "../../context/TabIntentContext";
+import { useIntent } from "../../hooks/useIntent"; // <--- Hook Import
 import { authService } from "../../services/authService";
 
 export default function SignIn() {
   const router = useRouter();
   
   const { setAuthStatus } = useContext(AuthContext);
-  const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
-  const { tabIntent, setTabIntent } = useContext(TabIntentContext);
+  const { resolveIntent } = useIntent(); // <--- Get Resolver
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,20 +31,13 @@ export default function SignIn() {
     setLoading(true);
     try {
       await authService.login(email, password);
-      setAuthStatus("AUTHENTICATED");
+      
+      // Update Context
+      setAuthStatus(AuthStatus.AUTHENTICATED);
 
-      if (tabIntent) {
-        const target = tabIntent === "RIDES" ? "/(tabs)/my-rides" : 
-                       tabIntent === "BIKES" ? "/(tabs)/my-bikes" : "/(tabs)/profile";
-        router.replace(target);
-        setTabIntent(null);
-      } else if (entryIntent) {
-        const target = entryIntent === "RENT" ? "/(tabs)/my-rides/filter" : "/(tabs)/my-bikes/list";
-        router.replace(target);
-        setEntryIntent(null);
-      } else {
-        router.replace("/(tabs)/explore"); 
-      }
+      // ✅ REFACTORED: Let the hook decide where to go
+      resolveIntent();
+
     } catch (error) {
       const errorMessage = error.response?.data?.detail || "Invalid email or password";
       Alert.alert("Login Failed", errorMessage);

@@ -13,9 +13,9 @@ import Label from "../../components/Label";
 import PasswordInput from "../../components/PasswordInput";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import TextField from "../../components/TextField";
+import { AuthStatus } from "../../constants/types";
 import { AuthContext } from "../../context/AuthContext";
-import { EntryIntentContext } from "../../context/EntryIntentContext";
-import { TabIntentContext } from "../../context/TabIntentContext";
+import { useIntent } from "../../hooks/useIntent"; // <--- Hook Import
 import { authService } from "../../services/authService";
 import { Colors } from "../../theme/colors";
 import { isAtLeast16, isValidEmail } from "../../utils/validators";
@@ -23,8 +23,8 @@ import { isAtLeast16, isValidEmail } from "../../utils/validators";
 export default function SignUp() {
   const router = useRouter();
   const { setAuthStatus } = useContext(AuthContext);
-  const { entryIntent, setEntryIntent } = useContext(EntryIntentContext);
-  const { tabIntent, setTabIntent } = useContext(TabIntentContext);
+  const { resolveIntent } = useIntent(); // <--- Get Resolver
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +36,7 @@ export default function SignUp() {
   const [verifying, setVerifying] = useState(false);
 
   const handleSignUp = async () => {
+    // ... validation logic remains the same ...
     if (!name || !email || !password || !dob) {
       Alert.alert("Missing Fields", "Please fill in all text details.");
       return;
@@ -88,20 +89,12 @@ export default function SignUp() {
 
       if (response.access_token) {
         await SecureStore.setItemAsync('user_token', response.access_token);
-        setAuthStatus("AUTHENTICATED");
+        
+        // Update Auth Context
+        setAuthStatus(AuthStatus.AUTHENTICATED);
 
-        if (tabIntent) {
-          const target = tabIntent === "RIDES" ? "/(tabs)/my-rides" : 
-                         tabIntent === "BIKES" ? "/(tabs)/my-bikes" : "/(tabs)/profile";
-          router.replace(target);
-          setTabIntent(null);
-        } else if (entryIntent) {
-          const target = entryIntent === "RENT" ? "/(tabs)/my-rides/filter" : "/(tabs)/my-bikes/list";
-          router.replace(target);
-          setEntryIntent(null);
-        } else {
-          router.replace("/(tabs)/explore");
-        }
+        // ✅ REFACTORED: Let the hook decide where to go
+        resolveIntent();
       }
     } catch (error) {
       const msg = error.response?.data?.detail || "Registration failed.";
@@ -125,7 +118,6 @@ export default function SignUp() {
         keyboardShouldPersistTaps="handled" 
         keyboardDismissMode="on-drag"
       >
-        
         <BrandLogo />
         <Label variant="heading">Sign up</Label>
 

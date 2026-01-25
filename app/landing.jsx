@@ -1,31 +1,19 @@
 import { useRouter } from "expo-router";
-import { useContext } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import Button from "../components/Button";
 import Label from "../components/Label";
 import ScreenWrapper from "../components/ScreenWrapper";
-import { AuthContext } from "../context/AuthContext";
-import { EntryIntentContext } from "../context/EntryIntentContext";
+import { useIntent } from "../hooks/useIntent"; // <--- Hook Import
 import { Colors } from "../theme/colors";
 
 export default function Landing() {
   const router = useRouter();
-  const { authStatus } = useContext(AuthContext);
-  const { setEntryIntent } = useContext(EntryIntentContext);
+  
+  // ✅ REFACTORED: Use the hook to handle the "Smart Logic"
+  const { setRentIntent, setListIntent } = useIntent();
 
   const handleExplore = () => {
     router.replace("/(tabs)/explore");
-  };
-
-  const handleEntryAction = (intent) => {
-    setEntryIntent(intent);
-
-    if (authStatus === "AUTHENTICATED") {
-      const target = intent === "RENT" ? "/(tabs)/my-rides/filter" : "/(tabs)/my-bikes/list";
-      router.replace(target);
-    } else {
-      router.push("/(auth)/signin");
-    }
   };
 
   return (
@@ -48,14 +36,14 @@ export default function Landing() {
           <Button 
             title="Rent a Bike" 
             variant="primary"
-            onPress={() => handleEntryAction("RENT")}
+            onPress={setRentIntent} // <--- Clean
             style={styles.buttonSpacing}
           />
 
           <Button 
             title="List a Bike" 
             variant="primary"
-            onPress={() => handleEntryAction("LIST")}
+            onPress={setListIntent} // <--- Clean
             style={styles.buttonSpacing}
           />
 

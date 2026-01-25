@@ -1,82 +1,57 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import * as SecureStore from 'expo-secure-store';
 import { useContext } from "react";
 import { StyleSheet, View } from "react-native";
 
 import Button from "../../components/Button";
 import Label from "../../components/Label";
+import ScreenWrapper from "../../components/ScreenWrapper";
 import { AuthContext } from "../../context/AuthContext";
-import { authService } from "../../services/authService";
 import { Colors } from "../../theme/colors";
 
 export default function Profile() {
   const router = useRouter();
-  const { setAuthStatus } = useContext(AuthContext);
+  
+  // Destructure the new 'logout' function
+  const { logout } = useContext(AuthContext);
 
   const handleLogout = async () => {
-    try {
-      if (authService.logout) {
-        await authService.logout();
-      }
-    } catch (error) {
-      console.log("Backend logout failed (non-critical):", error);
-    }
-
-    await SecureStore.deleteItemAsync('user_token');
-
-    setAuthStatus("UNAUTHENTICATED");
-
+    await logout();
+    // The Context changes authStatus -> "UNAUTHENTICATED"
+    // The Root Layout (app/_layout.jsx) should observe this and redirect, 
+    // but explicit replace ensures it happens instantly.
     router.replace("/landing");
   };
 
   return (
-    <View style={styles.container}>
+    <ScreenWrapper mode="scroll">
       <View style={styles.centerContent}>
-        <Label size={24} bold>
+        <Label size={24} bold style={{ marginBottom: 20 }}>
           Profile
         </Label>
 
+        {/* Note: Your Button component doesn't technically support iconLeft yet 
+            based on previous code, but I'll keep the logic simple here. */}
         <Button
           title="Logout"
           variant="primary"
           onPress={handleLogout}
           style={styles.logoutButton}
-          textStyle={styles.logoutText}
-          iconLeft={
-            <Ionicons
-              name="power-outline"
-              size={18}
-              color={Colors.white}
-              style={{ marginRight: 6 }}
-            />
-          }
         />
       </View>
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 50,
   },
   logoutButton: {
-    backgroundColor: "#E53935",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    marginTop: 20,
+    backgroundColor: Colors.red, // Red for danger action
     width: 160, 
-  },
-  logoutText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontFamily: "Lato-Bold",
+    borderColor: Colors.red, // Ensure border matches if variant logic adds one
   },
 });

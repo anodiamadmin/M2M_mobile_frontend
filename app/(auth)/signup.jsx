@@ -15,7 +15,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import TextField from "../../components/TextField";
 import { AuthStatus } from "../../constants/types";
 import { AuthContext } from "../../context/AuthContext";
-import { useIntent } from "../../hooks/useIntent"; // <--- Hook Import
+import { useIntent } from "../../hooks/useIntent";
 import { authService } from "../../services/authService";
 import { Colors } from "../../theme/colors";
 import { isAtLeast16, isValidEmail } from "../../utils/validators";
@@ -23,7 +23,7 @@ import { isAtLeast16, isValidEmail } from "../../utils/validators";
 export default function SignUp() {
   const router = useRouter();
   const { setAuthStatus } = useContext(AuthContext);
-  const { resolveIntent } = useIntent(); // <--- Get Resolver
+  const { resolveIntent } = useIntent(); 
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,7 +36,6 @@ export default function SignUp() {
   const [verifying, setVerifying] = useState(false);
 
   const handleSignUp = async () => {
-    // ... validation logic remains the same ...
     if (!name || !email || !password || !dob) {
       Alert.alert("Missing Fields", "Please fill in all text details.");
       return;
@@ -123,6 +122,7 @@ export default function SignUp() {
 
         <View style={styles.form}>
           <TextField
+            testID="nameInput" // <--- ADDED
             label="Full Name (as displayed on government ID)"
             value={name}
             onChangeText={setName}
@@ -130,6 +130,7 @@ export default function SignUp() {
           />
 
           <DatePicker 
+            testID="dobPicker" // <--- ADDED
             label="Date of Birth"
             value={dob}
             onChange={setDob}
@@ -142,12 +143,14 @@ export default function SignUp() {
           />
 
           <EmailInput 
+            testID="emailInput" // <--- ADDED
             value={email}
             onChangeText={setEmail}
             label="Email (for receipts and rides)"
           />
 
           <PasswordInput
+            testID="passwordInput" // <--- ADDED
             label="Create Password"
             value={password}
             onChangeText={setPassword}
@@ -156,6 +159,7 @@ export default function SignUp() {
 
         <View style={styles.uploadSection}>
           <ImageUploader 
+            testID="idUploader" // <--- ADDED
             label="Capture Govt. ID"
             activeLabel="ID Captured"
             icon="card-outline"
@@ -164,6 +168,7 @@ export default function SignUp() {
             aspect={[4, 3]}
           />
           <ImageUploader 
+            testID="selfieUploader" // <--- ADDED
             label="Take Your Selfie"
             activeLabel="Selfie Taken"
             icon="camera-outline"
@@ -175,13 +180,14 @@ export default function SignUp() {
 
         <View style={styles.termsContainer}>
           <Checkbox 
+            testID="termsCheckbox" // <--- ADDED
             checked={agreed} 
             onPress={() => setAgreed(!agreed)} 
           />
           <ActionRow 
             text="I accept the"
             actionText="Terms & Conditions"
-            onActionPress={() => router.push("terms&conditions")}
+            onActionPress={() => router.push("/terms")}
             style={{ 
               justifyContent: 'flex-start', 
               marginLeft: 10,
@@ -192,6 +198,7 @@ export default function SignUp() {
 
         <View style={styles.actionSection}>
           <Button 
+            testID="signUpButton" // <--- ADDED
             title={getButtonTitle()} 
             variant="primary" 
             onPress={handleSignUp} 

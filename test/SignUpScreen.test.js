@@ -1,194 +1,320 @@
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import * as SecureStore from 'expo-secure-store';
+import { Alert } from 'react-native';
+import SignUp from '../app/(auth)/signup';
+import { AuthStatus } from '../constants/types';
+import { authService } from '../services/authService';
+import { isAtLeast16, isValidEmail } from '../utils/validators';
 
-/* -------------------------------------------------- */
-/* Mock expo-vector-icons                             */
-/* -------------------------------------------------- */
-jest.mock('@expo/vector-icons', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-  return {
-    Ionicons: ({ name }) => <Text>{name}</Text>,
-  };
-});
+// --- GLOBAL SPIES ---
+const mockPush = jest.fn();
+const mockBack = jest.fn();
+const mockResolveIntent = jest.fn();
 
-/* -------------------------------------------------- */
-/* Mock DateTimePicker                                */
-/* -------------------------------------------------- */
-jest.mock('@react-native-community/datetimepicker', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return () => <View />;
-});
+// --- MOCKS ---
 
-/* -------------------------------------------------- */
-/* Mock Image Picker                                  */
-/* -------------------------------------------------- */
-jest.mock('expo-image-picker', () => ({
-  requestCameraPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true })
-  ),
-  launchCameraAsync: jest.fn(() =>
-    Promise.resolve({
-      canceled: false,
-      assets: [{ uri: 'mock-image-uri' }],
-    })
-  ),
-  MediaTypeOptions: { Images: 'Images' },
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn() }),
 }));
 
-/* -------------------------------------------------- */
-/* Mock SecureStore                                   */
-/* -------------------------------------------------- */
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+
+jest.mock('../hooks/useIntent', () => ({
+  useIntent: () => ({ resolveIntent: mockResolveIntent }),
+}));
+
+jest.mock('../services/authService', () => ({
+  authService: { register: jest.fn() },
+}));
+
 jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
 }));
 
-/* -------------------------------------------------- */
-/* Mock Auth Service (CORRECT PATH)                   */
-/* -------------------------------------------------- */
-jest.mock('../services/authService', () => ({
-  authService: {
-    register: jest.fn(() =>
-      Promise.resolve({ access_token: 'mock-token' })
-    ),
-  },
-}));
-
-/* -------------------------------------------------- */
-/* Mock Validators (CORRECT PATH)                     */
-/* -------------------------------------------------- */
 jest.mock('../utils/validators', () => ({
-  isValidEmail: jest.fn(() => true),
-  isAtLeast16: jest.fn(() => true),
+  isAtLeast16: jest.fn(),
+  isValidEmail: jest.fn(),
 }));
 
-/* -------------------------------------------------- */
-/* Mock expo-router                                   */
-/* -------------------------------------------------- */
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-const mockBack = jest.fn();
-
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    push: mockPush,
-    back: mockBack,
-  }),
-}));
-
-/* -------------------------------------------------- */
-/* Mock Safe Area (✅ SYNTAX FIXED)                    */
-/* -------------------------------------------------- */
-jest.mock('react-native-safe-area-context', () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0 }),
-}));
-
-/* -------------------------------------------------- */
-/* Mock UI Components                                 */
-/* -------------------------------------------------- */
-jest.mock('../components/Label', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-  return ({ children }) => <Text>{children}</Text>;
-});
+// --- UI MOCKS ---
 
 jest.mock('../components/Button', () => {
-  const React = require('react');
   const { TouchableOpacity, Text } = require('react-native');
-  return ({ title, onPress, disabled }) => (
-    <TouchableOpacity onPress={onPress} disabled={disabled}>
+  return ({ title, onPress, testID, disabled }) => (
+    <TouchableOpacity testID={testID} onPress={onPress} disabled={disabled}>
       <Text>{title}</Text>
     </TouchableOpacity>
   );
 });
 
-jest.mock('../components/TextField', () => {
-  const React = require('react');
-  const { TextInput } = require('react-native');
-  return ({ placeholder, value, onChangeText }) => (
-    <TextInput
-      placeholder={placeholder}
-      value={value}
-      onChangeText={onChangeText}
-    />
+jest.mock('../components/Checkbox', () => {
+  const { TouchableOpacity, Text } = require('react-native');
+  return ({ checked, onPress, testID }) => (
+    <TouchableOpacity testID={testID} onPress={onPress}>
+      <Text>{checked ? '[✓]' : '[ ]'}</Text>
+    </TouchableOpacity>
   );
 });
 
-/* -------------------------------------------------- */
-/* Import Screen & Contexts                           */
-/* -------------------------------------------------- */
-import SignUp from '../app/(auth)/signup';
+jest.mock('../components/ActionRow', () => {
+  const { TouchableOpacity, Text } = require('react-native');
+  return ({ actionText, onActionPress }) => (
+    <TouchableOpacity onPress={onActionPress}>
+      <Text>{actionText}</Text>
+    </TouchableOpacity>
+  );
+});
+
+jest.mock('../components/DatePicker', () => {
+  const { Button } = require('react-native');
+  return ({ onChange, testID }) => (
+    <Button testID={testID} title="Mock Date" onPress={() => onChange(new Date("2000-01-01"))} />
+  );
+});
+
+jest.mock('../components/ImageUploader', () => {
+  const { Button } = require('react-native');
+  return ({ onImageSelected, testID }) => (
+    <Button testID={testID} title="Mock Upload" onPress={() => onImageSelected("file://mock-image.jpg")} />
+  );
+});
+
+jest.mock('../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../components/ScreenWrapper', () => ({ children }) => children);
+
 import { AuthContext } from '../context/AuthContext';
-import { EntryIntentContext } from '../context/EntryIntentContext';
-import { TabIntentContext } from '../context/TabIntentContext';
-
-/* -------------------------------------------------- */
-/* Helper Renderer                                    */
-/* -------------------------------------------------- */
-const renderWithProviders = () => {
-  const setAuthStatus = jest.fn();
-  const setEntryIntent = jest.fn();
-  const setTabIntent = jest.fn();
-
-  return {
-    setAuthStatus,
-    ...render(
-      <AuthContext.Provider value={{ setAuthStatus }}>
-        <EntryIntentContext.Provider value={{ entryIntent: null, setEntryIntent }}>
-          <TabIntentContext.Provider value={{ tabIntent: null, setTabIntent }}>
-            <SignUp />
-          </TabIntentContext.Provider>
-        </EntryIntentContext.Provider>
-      </AuthContext.Provider>
-    ),
-  };
+const renderWithContext = (component, contextOverrides = {}) => {
+  const defaultContext = { setAuthStatus: jest.fn() };
+  return render(
+    <AuthContext.Provider value={{ ...defaultContext, ...contextOverrides }}>
+      {component}
+    </AuthContext.Provider>
+  );
 };
 
-/* -------------------------------------------------- */
-/* TESTS                                              */
-/* -------------------------------------------------- */
-describe('Sign Up Screen', () => {
+// --- TEST SUITE ---
+describe('<SignUp /> Integration', () => {
+  let consoleSpy;
+
+  beforeAll(() => {
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    consoleSpy.mockRestore();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Alert, 'alert');
+    jest.useFakeTimers(); 
+    
+    // Default: Validators Pass
+    isAtLeast16.mockReturnValue(true);
+    isValidEmail.mockReturnValue(true);
+    authService.register.mockResolvedValue({ access_token: 'fake-jwt' });
   });
 
-  it('renders all required fields and actions', () => {
-    const { getByText, getByPlaceholderText } = renderWithProviders();
-
-    expect(getByPlaceholderText('Enter Full Name')).toBeTruthy();
-    expect(getByText('Select Your Date of Birth')).toBeTruthy();
-    expect(getByPlaceholderText('Enter Email')).toBeTruthy();
-    expect(getByPlaceholderText('Enter Password')).toBeTruthy();
-
-    expect(getByText('Capture Govt. ID')).toBeTruthy();
-    expect(getByText('Take Your Selfie')).toBeTruthy();
-    expect(getByText('Continue')).toBeTruthy();
-    expect(getByText('Sign in')).toBeTruthy();
-    expect(getByText('Terms & Conditions')).toBeTruthy();
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  it('navigates to Terms & Conditions screen', () => {
-    const { getByText } = renderWithProviders();
+  const fillForm = (getByTestId) => {
+    fireEvent.changeText(getByTestId('nameInput'), 'John Doe');
+    fireEvent.changeText(getByTestId('emailInput'), 'john@test.com');
+    fireEvent.changeText(getByTestId('passwordInput'), 'password123');
+    fireEvent.press(getByTestId('dobPicker'));
+    fireEvent.press(getByTestId('idUploader'));
+    fireEvent.press(getByTestId('selfieUploader'));
+    fireEvent.press(getByTestId('termsCheckbox'));
+  };
 
-    fireEvent.press(getByText('Terms & Conditions'));
-    expect(mockPush).toHaveBeenCalledWith('terms&conditions');
+  // --- VALIDATION TESTS ---
+  
+  it('shows error if fields are missing', () => {
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fireEvent.press(getByTestId('signUpButton'));
+    expect(Alert.alert).toHaveBeenCalledWith("Missing Fields", expect.anything());
   });
 
-  it('navigates back on Sign in press', () => {
-    const { getByText } = renderWithProviders();
+  it('shows error if email is invalid', () => {
+    isValidEmail.mockReturnValue(false); 
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId);
+    fireEvent.press(getByTestId('signUpButton'));
+    expect(Alert.alert).toHaveBeenCalledWith("Invalid Email", expect.anything());
+  });
 
-    fireEvent.press(getByText('Sign in'));
+  it('shows error if user is underage', () => {
+    isAtLeast16.mockReturnValue(false);
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId);
+    fireEvent.press(getByTestId('signUpButton'));
+    expect(Alert.alert).toHaveBeenCalledWith("Age Restriction", expect.anything());
+  });
+
+  it('shows error if photos are missing', () => {
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fireEvent.changeText(getByTestId('nameInput'), 'John Doe');
+    fireEvent.changeText(getByTestId('emailInput'), 'john@test.com');
+    fireEvent.changeText(getByTestId('passwordInput'), 'password123');
+    fireEvent.press(getByTestId('dobPicker'));
+    fireEvent.press(getByTestId('termsCheckbox'));
+    
+    fireEvent.press(getByTestId('signUpButton'));
+    expect(Alert.alert).toHaveBeenCalledWith("Photos Required", expect.anything());
+  });
+
+  it('shows error if terms not accepted', () => {
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId); 
+    fireEvent.press(getByTestId('termsCheckbox')); // Unchecks it
+    
+    fireEvent.press(getByTestId('signUpButton'));
+    expect(Alert.alert).toHaveBeenCalledWith("Terms Required", expect.anything());
+  });
+
+  // --- NAVIGATION TESTS ---
+
+  it('navigates to Terms screen', () => {
+    const { getByText } = renderWithContext(<SignUp />);
+    fireEvent.press(getByText("Terms & Conditions"));
+    expect(mockPush).toHaveBeenCalledWith("/terms");
+  });
+
+  it('navigates back to Sign In', () => {
+    const { getByText } = renderWithContext(<SignUp />);
+    fireEvent.press(getByText("Sign in"));
     expect(mockBack).toHaveBeenCalled();
   });
 
-  it('allows Govt ID & Selfie button press', () => {
-    const { getByText } = renderWithProviders();
+  // --- ERROR HANDLING & SUCCESS TESTS ---
 
-    fireEvent.press(getByText('Capture Govt. ID'));
-    fireEvent.press(getByText('Take Your Selfie'));
+  it('handles unexpected errors during verification phase', async () => {
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId);
 
-    expect(true).toBe(true);
+    Alert.alert.mockImplementationOnce(() => {
+      throw new Error("Simulation Crash");
+    });
+
+    fireEvent.press(getByTestId('signUpButton'));
+
+    act(() => { jest.advanceTimersByTime(2000); });
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith("Error:", expect.any(Error));
+    });
+  });
+
+  it('handles server registration failure (Specific Error)', async () => {
+    authService.register.mockRejectedValue({
+      response: { data: { detail: "Email already in use" } }
+    });
+
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId);
+    fireEvent.press(getByTestId('signUpButton'));
+
+    act(() => { jest.advanceTimersByTime(2000); });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
+    });
+    
+    const alertButtons = Alert.alert.mock.calls[0][2];
+    const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
+    
+    await act(async () => {
+      await createAccountBtn.onPress();
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith("Error", "Email already in use");
+    });
+  });
+
+  it('handles generic registration failure', async () => {
+    authService.register.mockRejectedValue(new Error("Network Error"));
+
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId);
+    fireEvent.press(getByTestId('signUpButton'));
+
+    act(() => { jest.advanceTimersByTime(2000); });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
+    });
+    
+    const alertButtons = Alert.alert.mock.calls[0][2];
+    const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
+    
+    await act(async () => {
+      await createAccountBtn.onPress();
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith("Error", "Registration failed.");
+    });
+  });
+
+  // ✅ NEW TEST CASE: COVERS THE "ELSE" (Missing Token) BRANCH
+  it('handles registration success but missing access_token (Uncovered Branch)', async () => {
+    // Return success but NO token
+    authService.register.mockResolvedValue({ success: true }); 
+
+    const { getByTestId } = renderWithContext(<SignUp />);
+    fillForm(getByTestId);
+    fireEvent.press(getByTestId('signUpButton'));
+
+    act(() => { jest.advanceTimersByTime(2000); });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
+    });
+    
+    const alertButtons = Alert.alert.mock.calls[0][2];
+    const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
+    
+    await act(async () => {
+      await createAccountBtn.onPress();
+    });
+
+    // We expect NO navigation and NO secure store save because the token was missing
+    await waitFor(() => {
+      expect(authService.register).toHaveBeenCalled();
+      expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+      expect(mockResolveIntent).not.toHaveBeenCalled();
+    });
+  });
+
+  it('successfully registers, saves token, and resolves intent', async () => {
+    const setAuthStatusSpy = jest.fn();
+    const { getByTestId } = renderWithContext(<SignUp />, { setAuthStatus: setAuthStatusSpy });
+    
+    fillForm(getByTestId);
+    fireEvent.press(getByTestId('signUpButton'));
+
+    act(() => { jest.advanceTimersByTime(2000); });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith("Identity Verified", expect.anything(), expect.anything());
+    });
+    
+    const alertButtons = Alert.alert.mock.calls[0][2];
+    const createAccountBtn = alertButtons.find(b => b.text === "Create Account");
+    await act(async () => {
+      await createAccountBtn.onPress();
+    });
+    
+    await waitFor(() => {
+      expect(authService.register).toHaveBeenCalled();
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith('user_token', 'fake-jwt');
+      expect(setAuthStatusSpy).toHaveBeenCalledWith(AuthStatus.AUTHENTICATED);
+      expect(mockResolveIntent).toHaveBeenCalled();
+    });
   });
 });

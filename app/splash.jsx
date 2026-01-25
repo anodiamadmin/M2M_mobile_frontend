@@ -71,7 +71,8 @@ export default function SplashScreenComponent() {
             style={styles.logo}
             resizeMode="contain"
             // This triggers the handoff
-            onLoad={onImageLoaded} 
+            onLoad={onImageLoaded}
+            testID="splash-image"  // 👈 ADD THIS
           />
         </View>
 

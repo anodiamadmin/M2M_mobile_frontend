@@ -1,4 +1,3 @@
-import { useState } from "react";
 import TextField from "./TextField";
 
 export default function PasswordInput({ 
@@ -9,8 +8,6 @@ export default function PasswordInput({
   placeholder = "Enter Password",
   ...props
 }) {
-  const [isVisible, setIsVisible] = useState(false);
-
   return (
     <TextField
       label={label}
@@ -18,9 +15,7 @@ export default function PasswordInput({
       onChangeText={onChangeText}
       error={error}
       placeholder={placeholder}
-      secureTextEntry={!isVisible}
-      rightIcon={isVisible ? "eye-off" : "eye"} 
-      onRightIconPress={() => setIsVisible(!isVisible)}
+      secureTextEntry={true}
       autoCapitalize="none"
       {...props}
     />

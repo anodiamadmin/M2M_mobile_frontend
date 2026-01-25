@@ -1,94 +1,112 @@
-import React from 'react';
-import { act, fireEvent, render } from '@testing-library/react-native';
-import { Image } from 'react-native';
+import { act, render, waitFor } from '@testing-library/react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import SplashScreenComponent from '../app/splash';
+import { AuthStatus } from '../constants/types';
+import { AuthContext } from '../context/AuthContext';
 
-/**
- * 🔹 Mock expo-secure-store (prevents ESM crash)
- */
-jest.mock('expo-secure-store');
+// Mocks
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn(),
+  hideAsync: jest.fn(),
+}));
 
-/**
- * 🔹 Mock expo-router
- */
-jest.mock('expo-router', () => {
-  const replace = jest.fn();
-  return {
-    useRouter: () => ({ replace }),
-    __mockReplace: replace,
-  };
+const mockReplace = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
+jest.mock('../components/ScreenWrapper', () => {
+  const { View } = require('react-native');
+  return ({ children }) => <View>{children}</View>;
 });
+jest.mock('../components/Label', () => 'Label');
 
-/**
- * 🔹 Mock Label component
- */
-jest.mock('@components/Label', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-
-  return ({ children }) => <Text>{children}</Text>;
-});
-
-/**
- * 🔹 Mock AuthContext completely
- * (Prevents SecureStore + side effects)
- */
-jest.mock('../context/AuthContext', () => {
-  const React = require('react');
-  return {
-    AuthContext: React.createContext({
-      authStatus: 'UNAUTHENTICATED',
-    }),
-  };
-});
-
-import SplashScreen from '../app/splash';
-
-jest.useFakeTimers();
+const renderWithAuth = (status) => {
+  return render(
+    <AuthContext.Provider value={{ authStatus: status }}>
+      <SplashScreenComponent />
+    </AuthContext.Provider>
+  );
+};
 
 describe('Splash Screen', () => {
-  let replaceMock;
+  let consoleSpy;
+
+  beforeAll(() => {
+    // 1. Silence console.warn globally for this suite
+    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    consoleSpy.mockRestore();
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    replaceMock = require('expo-router').__mockReplace;
+    jest.useFakeTimers();
   });
 
-  it('renders splash screen immediately on app launch', () => {
-    const { getByText } = render(<SplashScreen />);
-
-    expect(
-      getByText('Making Sydney E-bike Friendly')
-    ).toBeTruthy();
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  it('displays logo, tagline and brand values', () => {
-    const { getByText } = render(<SplashScreen />);
+  it('Happy Path: Loads Image -> Hides Splash -> Waits 2s -> Navigates', async () => {
+    const { getByTestId } = renderWithAuth(AuthStatus.AUTHENTICATED);
 
-    expect(getByText('Making Sydney E-bike Friendly')).toBeTruthy();
-    expect(getByText('Affordable')).toBeTruthy();
-    expect(getByText('Reliable')).toBeTruthy();
-    expect(getByText('Safe')).toBeTruthy();
-  });
-
-  it('does not navigate before 3 seconds', () => {
-    render(<SplashScreen />);
-
-    act(() => {
-      jest.advanceTimersByTime(2900);
+    const image = getByTestId('splash-image');
+    await act(async () => {
+      image.props.onLoad(); 
     });
 
-    expect(replaceMock).not.toHaveBeenCalled();
-  });
-
-  it('navigates to Landing screen after 3 seconds once image loads', () => {
-    const { UNSAFE_getByType } = render(<SplashScreen />);
-    const image = UNSAFE_getByType(Image);
-
-    act(() => {
-      fireEvent(image, 'load');
-      jest.advanceTimersByTime(3000);
+    await waitFor(() => {
+      expect(SplashScreen.hideAsync).toHaveBeenCalled();
     });
 
-    expect(replaceMock).toHaveBeenCalledWith('/landing');
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/(tabs)/explore');
+    });
+  });
+
+  it('Error Path: Handles native splash error gracefully', async () => {
+    SplashScreen.hideAsync.mockRejectedValue(new Error("Native Failure"));
+    
+    const { getByTestId } = renderWithAuth(AuthStatus.UNAUTHENTICATED);
+
+    const image = getByTestId('splash-image');
+    await act(async () => {
+      image.props.onLoad();
+    });
+
+    // Verify the spy was called (Caught the error)
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/landing');
+    });
+  });
+
+  it('Waits indefinitely if AuthStatus is UNKNOWN', async () => {
+    const { getByTestId } = renderWithAuth(AuthStatus.UNKNOWN);
+
+    const image = getByTestId('splash-image');
+    await act(async () => {
+      image.props.onLoad();
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

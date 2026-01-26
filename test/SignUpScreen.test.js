@@ -162,7 +162,7 @@ describe('<SignUp /> Integration', () => {
     fillForm(getByTestId); 
     fireEvent.press(getByTestId('termsCheckbox'));
     fireEvent.press(getByTestId('signUpButton'));
-    expect(Alert.alert).toHaveBeenCalledWith("Terms Required", expect.anything());
+    expect(Alert.alert).toHaveBeenCalledWith("Agreement Required", expect.anything());
   });
 
   it('navigates to Terms screen', () => {

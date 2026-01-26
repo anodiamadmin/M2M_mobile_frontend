@@ -6,6 +6,13 @@ import { AuthContext } from '../context/AuthContext';
 import { useIntent } from '../hooks/useIntent';
 import { authService } from '../services/authService';
 
+// ✅ Mock SecureStore (Required because SignIn calls setItemAsync)
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn().mockResolvedValue(null),
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  deleteItemAsync: jest.fn().mockResolvedValue(null),
+}));
+
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
@@ -117,7 +124,9 @@ describe('SignIn Screen', () => {
     const setAuthStatusSpy = jest.fn();
 
     useIntent.mockReturnValue({ resolveIntent: resolveIntentSpy });
-    authService.login.mockResolvedValue({ token: 'fake-token' });
+    
+    // Corrected to access_token to match logic
+    authService.login.mockResolvedValue({ access_token: 'fake-token' });
 
     const { getByTestId } = render(
       <AuthContext.Provider value={{ setAuthStatus: setAuthStatusSpy }}>
@@ -135,6 +144,33 @@ describe('SignIn Screen', () => {
     });
   });
 
+  // ✅ NEW TEST CASE: Covers the "False" branch of "if (response.access_token)"
+  it('does not authenticate if response is missing access_token', async () => {
+    const resolveIntentSpy = jest.fn();
+    const setAuthStatusSpy = jest.fn();
+    
+    useIntent.mockReturnValue({ resolveIntent: resolveIntentSpy });
+    
+    // Response is valid (200 OK) but has no token
+    authService.login.mockResolvedValue({ message: 'Success but no token' });
+
+    const { getByTestId } = render(
+      <AuthContext.Provider value={{ setAuthStatus: setAuthStatusSpy }}>
+        <SignIn />
+      </AuthContext.Provider>
+    );
+
+    fireEvent.changeText(getByTestId('emailTextInput'), 'valid@user.com');
+    fireEvent.changeText(getByTestId('passwordTextInput'), 'password123');
+    fireEvent.press(getByTestId('SignInButton'));
+
+    await waitFor(() => {
+      // Expect that we did NOT call auth logic
+      expect(setAuthStatusSpy).not.toHaveBeenCalled();
+      expect(resolveIntentSpy).not.toHaveBeenCalled();
+    });
+  });
+
   it('navigates to sign up screen when link is pressed', () => {
     useIntent.mockReturnValue({ resolveIntent: jest.fn() });
     const { getByText } = render(
@@ -144,5 +180,5 @@ describe('SignIn Screen', () => {
     );
     
     fireEvent.press(getByText("Sign Up"));
-    });
+  });
 });

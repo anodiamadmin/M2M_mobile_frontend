@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import BrandLogo from "../../components/BrandLogo";
 import Button from "../../components/Button";
 import Label from "../../components/Label";
@@ -10,15 +10,10 @@ export default function Terms() {
   const router = useRouter();
 
   return (
-    <ScreenWrapper mode="scroll" statusBar="dark">
-      <ScrollView 
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <BrandLogo style={{ marginBottom: 10 }} />
-          <Label variant="heading">Terms & Conditions</Label>
-        </View>
+    <ScreenWrapper mode="default" statusBar="dark">
+      <View style={styles.container}>
+        <BrandLogo />
+        <Label variant="heading">Terms & Conditions</Label>
 
         <View style={styles.body}>
           <Label 
@@ -36,7 +31,7 @@ export default function Terms() {
             <Label 
               size={14} 
               bold
-              variant= "body"
+              variant="body"
               color={Colors.primary} 
               onPress={() => console.log("Read More Clicked")}
               style={{ textDecorationLine: 'underline' }}
@@ -46,28 +41,23 @@ export default function Terms() {
           </Label>
         </View>
 
-        <Button 
-          title="Ok" 
-          variant="primary" 
-          onPress={() => router.back()} 
-          style={{ marginTop: 20 }}
-        />
-
-      </ScrollView>
+        <View style={styles.footer}>
+          <Button 
+            title="Ok" 
+            variant="primary" 
+            onPress={() => router.back()} 
+          />
+        </View>
+      </View>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flexGrow: 1,
+  container: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 20, 
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 20,
-    alignItems: 'flex-start', 
+    paddingTop: 20,
   },
   body: {
     marginBottom: 20,
@@ -76,4 +66,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: 'justify',
   },
+  footer: {
+    marginTop: 20,
+  }
 });

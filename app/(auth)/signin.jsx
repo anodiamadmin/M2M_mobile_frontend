@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
+import * as SecureStore from 'expo-secure-store';
 import { useContext, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import ActionRow from "../../components/ActionRow";
 import BrandLogo from "../../components/BrandLogo";
 import Button from "../../components/Button";
@@ -8,17 +9,15 @@ import EmailInput from "../../components/EmailInput";
 import Label from "../../components/Label";
 import PasswordInput from "../../components/PasswordInput";
 import ScreenWrapper from "../../components/ScreenWrapper";
-import { AuthStatus } from "../../constants/types"; // Optional: Use Enum for setting status
+import { AuthStatus } from "../../constants/types";
 import { AuthContext } from "../../context/AuthContext";
-import { useIntent } from "../../hooks/useIntent"; // <--- Hook Import
+import { useIntent } from "../../hooks/useIntent";
 import { authService } from "../../services/authService";
 
 export default function SignIn() {
   const router = useRouter();
-  
   const { setAuthStatus } = useContext(AuthContext);
-  const { resolveIntent } = useIntent(); // <--- Get Resolver
-
+  const { resolveIntent } = useIntent();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,14 +29,13 @@ export default function SignIn() {
     }
     setLoading(true);
     try {
-      await authService.login(email, password);
+      const response = await authService.login(email, password);
       
-      // Update Context
-      setAuthStatus(AuthStatus.AUTHENTICATED);
-
-      // ✅ REFACTORED: Let the hook decide where to go
-      resolveIntent();
-
+      if (response.access_token) {
+        await SecureStore.setItemAsync('user_token', response.access_token);
+        setAuthStatus(AuthStatus.AUTHENTICATED);
+        resolveIntent();
+      }
     } catch (error) {
       const errorMessage = error.response?.data?.detail || "Invalid email or password";
       Alert.alert("Login Failed", errorMessage);
@@ -47,14 +45,8 @@ export default function SignIn() {
   };
 
   return (
-    <ScreenWrapper mode="scroll" statusBar="dark">
-      <ScrollView 
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled" 
-        keyboardDismissMode="on-drag"
-      >
-        
+    <ScreenWrapper mode="default" statusBar="dark">
+      <View style={styles.container}>
         <BrandLogo />
         <Label variant="heading">Sign in to continue</Label>
 
@@ -83,22 +75,22 @@ export default function SignIn() {
         <ActionRow 
           text="Don’t have an account?"
           actionText="Sign Up"
-          onActionPress={() => router.push("/(auth)/signup")}
+          onActionPress={() => router.push("/(auth)/signup")} 
         />
-
-      </ScrollView>
+        
+      </View>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flexGrow: 1,
+  container: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 20, 
   },
   form: {
-    marginBottom: 10,
+    marginBottom: 20,
   },
   signInButton: {
     marginTop: 20

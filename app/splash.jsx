@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
 import { useContext, useEffect, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Dimensions, Image, StyleSheet, View } from "react-native";
 import Label from "../components/Label";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { AuthStatus } from "../constants/types";
@@ -9,6 +9,8 @@ import { AuthContext } from "../context/AuthContext";
 import { Colors } from "../theme/colors";
 
 SplashScreen.preventAutoHideAsync();
+
+const { width } = Dimensions.get('window');
 
 export default function SplashScreenComponent() {
   const router = useRouter();
@@ -29,7 +31,6 @@ export default function SplashScreenComponent() {
 
   useEffect(() => {
     if (!isAppReady) return;
-    
     if (authStatus === AuthStatus.UNKNOWN) return;
 
     if (authStatus === AuthStatus.AUTHENTICATED) {
@@ -40,14 +41,17 @@ export default function SplashScreenComponent() {
   }, [authStatus, isAppReady]); 
 
   return (
-    <ScreenWrapper backgroundColor={Colors.black} statusBar="light">
+    <ScreenWrapper backgroundColor={Colors.black} statusBar="light" translucent={true}>
       <View style={styles.contentContainer}>
+        
+        {/* --- Top Section --- */}
         <View style={styles.topSection}>
           <Label size={18} color={Colors.white} style={{ letterSpacing: 0.5 }}>
             Making Sydney E-bike Friendly
           </Label>
         </View>
 
+        {/* --- Logo Container --- */}
         <View style={styles.logoContainer}>
           <Image 
             source={require("../assets/images/SplashLogo.png")} 
@@ -58,6 +62,7 @@ export default function SplashScreenComponent() {
           />
         </View>
 
+        {/* --- Footer --- */}
         <View style={styles.footerContainer}>
           <Label style={{ textAlign: 'center' }}>
             <Label size={24} bold secondary color={Colors.secondary}>Affordable</Label>
@@ -74,24 +79,42 @@ export default function SplashScreenComponent() {
 const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 100,
+    position: 'relative',
+    // ❌ DELETED: justifyContent: "center" (This was causing the shake)
+    // ❌ DELETED: alignItems: "center"
   },
   topSection: {
-    marginTop: 40,
+    position: 'absolute',
+    top: '15%', 
+    width: '100%', // Ensure text centers horizontally
+    alignItems: 'center',
+    zIndex: 2,
   },
   logoContainer: {
+    // ✅ NEW: Absolute Position pins it to the screen edges.
+    // It will NOT move even if the view shrinks.
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    
+    // Now we center the image *inside* this pinned overlay
     justifyContent: "center",
     alignItems: "center",
-    width: "100%", 
+    zIndex: 1, 
   },
   logo: {
-    width: "85%",        
-    aspectRatio: 1,      
-    maxHeight: 450,      
+    width: width * 0.85, 
+    height: width * 0.85, 
+    maxHeight: 450,
+    maxWidth: 450,      
   },
   footerContainer: {
-    marginBottom: 40,
+    position: 'absolute',
+    bottom: '15%',
+    width: '100%', // Ensure text centers horizontally
+    alignItems: 'center',
+    zIndex: 2,
   },
 });

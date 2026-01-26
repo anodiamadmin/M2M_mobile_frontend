@@ -18,7 +18,6 @@ export default function Label({
   bold,
   secondary,
   color = Colors.black,
-  
   style,
   ...props
 }) {
@@ -31,6 +30,8 @@ export default function Label({
   const fontFamily = isSecondary
     ? (isBold ? Fonts.secondaryBold : Fonts.secondary)
     : (isBold ? Fonts.primaryBold : Fonts.primary);
+    
+  const defaultMarginBottom = variant === 'heading' ? 20 : 0;
 
   return (
     <Text
@@ -39,7 +40,7 @@ export default function Label({
           fontFamily,
           fontSize: finalSize,
           color,
-          marginBottom: variant === 'heading' ? 20 : 0, 
+          marginBottom: defaultMarginBottom, 
         },
         style,
       ]}

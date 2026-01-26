@@ -34,14 +34,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 10, 
   },
   logo: {
     width: 50,
     height: 50,
-    marginRight: 0,
   },
   text: {
     marginTop: -2, 
+    marginBottom: 0,
   }
 });

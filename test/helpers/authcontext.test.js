@@ -2,9 +2,9 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useContext } from 'react';
 import { Button, Text } from 'react-native';
-import { AuthStatus } from '../constants/types';
-import { AuthContext, AuthProvider } from '../context/AuthContext';
-import { authService } from '../services/authService';
+import { AuthStatus } from '../../constants/types';
+import { AuthContext, AuthProvider } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
@@ -12,7 +12,7 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
 }));
 
-jest.mock('../services/authService', () => ({
+jest.mock('../../services/authService', () => ({
   authService: {
     logout: jest.fn(),
   },

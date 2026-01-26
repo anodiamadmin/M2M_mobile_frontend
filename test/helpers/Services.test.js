@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { authService } from '../services/authService';
+import { authService } from '../../services/authService';
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
@@ -40,7 +40,7 @@ describe('Services', () => {
 
   beforeAll(() => {
     try {
-      require('../services/apiClient');
+      require('../../services/apiClient');
     } catch (e) {}
 
     if (axios.create.mock.results.length > 0) {

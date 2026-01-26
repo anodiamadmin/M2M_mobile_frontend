@@ -1,13 +1,13 @@
 import { render } from '@testing-library/react-native';
 import { Keyboard, Platform, Text } from 'react-native';
-import BrandLogo from '../components/BrandLogo';
-import EmailInput from '../components/EmailInput';
-import Label from '../components/Label';
-import PasswordInput from '../components/PasswordInput';
-import ScreenWrapper from '../components/ScreenWrapper';
-import TextField from '../components/TextField';
-import { Colors } from '../theme/colors';
-import { Fonts } from '../theme/fonts';
+import BrandLogo from '../../components/BrandLogo';
+import EmailInput from '../../components/EmailInput';
+import Label from '../../components/Label';
+import PasswordInput from '../../components/PasswordInput';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import TextField from '../../components/TextField';
+import { Colors } from '../../theme/colors';
+import { Fonts } from '../../theme/fonts';
 
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 10, bottom: 10, left: 0, right: 0 }),
@@ -17,7 +17,7 @@ jest.mock('expo-status-bar', () => ({
   StatusBar: () => null,
 }));
 
-jest.mock('../theme/fonts', () => ({
+jest.mock('../../theme/fonts', () => ({
   Fonts: {
     primary: 'Primary-Regular',
     primaryBold: 'Primary-Bold',

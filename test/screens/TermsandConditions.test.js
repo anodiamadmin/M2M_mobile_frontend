@@ -1,12 +1,12 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import Terms from '../app/(public)/terms';
+import Terms from '../../app/(public)/terms';
 
 const mockBack = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack }),
 }));
 
-jest.mock('../components/Button', () => {
+jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ title, onPress }) => (
     <TouchableOpacity onPress={onPress}>
@@ -15,15 +15,15 @@ jest.mock('../components/Button', () => {
   );
 });
 
-jest.mock('../components/Label', () => {
+jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
   return ({ children, onPress, ...props }) => (
     <Text onPress={onPress} {...props}>{children}</Text>
   );
 });
 
-jest.mock('../components/ScreenWrapper', () => ({ children }) => children);
-jest.mock('../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/ScreenWrapper', () => ({ children }) => children);
+jest.mock('../../components/BrandLogo', () => 'BrandLogo');
 
 describe('Terms & Conditions', () => {
   it('renders correctly and handles navigation', () => {

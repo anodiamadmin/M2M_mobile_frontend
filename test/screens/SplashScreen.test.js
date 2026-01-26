@@ -1,8 +1,8 @@
 import { act, render, waitFor } from '@testing-library/react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import SplashScreenComponent from '../app/splash';
-import { AuthStatus } from '../constants/types';
-import { AuthContext } from '../context/AuthContext';
+import SplashScreenComponent from '../../app/splash';
+import { AuthStatus } from '../../constants/types';
+import { AuthContext } from '../../context/AuthContext';
 
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(),
@@ -14,11 +14,11 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace }),
 }));
 
-jest.mock('../components/ScreenWrapper', () => {
+jest.mock('../../components/ScreenWrapper', () => {
   const { View } = require('react-native');
   return ({ children }) => <View>{children}</View>;
 });
-jest.mock('../components/Label', () => 'Label');
+jest.mock('../../components/Label', () => 'Label');
 
 const renderWithAuth = (status) => {
   return render(

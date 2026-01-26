@@ -1,7 +1,7 @@
-import apiClient from '../services/apiClient';
-import { authService } from '../services/authService';
+import apiClient from '../../services/apiClient';
+import { authService } from '../../services/authService';
 
-jest.mock('../services/apiClient', () => ({
+jest.mock('../../services/apiClient', () => ({
   __esModule: true,
   default: {
     post: jest.fn(),

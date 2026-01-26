@@ -1,10 +1,10 @@
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
-import SignUp from '../app/(auth)/signup';
-import { AuthStatus } from '../constants/types';
-import { authService } from '../services/authService';
-import { isAtLeast16, isValidEmail } from '../utils/validators';
+import SignUp from '../../app/(auth)/signup';
+import { AuthStatus } from '../../constants/types';
+import { authService } from '../../services/authService';
+import { isAtLeast16, isValidEmail } from '../../utils/validators';
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -18,11 +18,11 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-jest.mock('../hooks/useIntent', () => ({
+jest.mock('../../hooks/useIntent', () => ({
   useIntent: () => ({ resolveIntent: mockResolveIntent }),
 }));
 
-jest.mock('../services/authService', () => ({
+jest.mock('../../services/authService', () => ({
   authService: { register: jest.fn() },
 }));
 
@@ -30,12 +30,12 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
 }));
 
-jest.mock('../utils/validators', () => ({
+jest.mock('../../utils/validators', () => ({
   isAtLeast16: jest.fn(),
   isValidEmail: jest.fn(),
 }));
 
-jest.mock('../components/Button', () => {
+jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ title, onPress, testID, disabled }) => (
     <TouchableOpacity testID={testID} onPress={onPress} disabled={disabled}>
@@ -44,7 +44,7 @@ jest.mock('../components/Button', () => {
   );
 });
 
-jest.mock('../components/Checkbox', () => {
+jest.mock('../../components/Checkbox', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ checked, onPress, testID }) => (
     <TouchableOpacity testID={testID} onPress={onPress}>
@@ -53,7 +53,7 @@ jest.mock('../components/Checkbox', () => {
   );
 });
 
-jest.mock('../components/ActionRow', () => {
+jest.mock('../../components/ActionRow', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ actionText, onActionPress }) => (
     <TouchableOpacity onPress={onActionPress}>
@@ -62,24 +62,24 @@ jest.mock('../components/ActionRow', () => {
   );
 });
 
-jest.mock('../components/DatePicker', () => {
+jest.mock('../../components/DatePicker', () => {
   const { Button } = require('react-native');
   return ({ onChange, testID }) => (
     <Button testID={testID} title="Mock Date" onPress={() => onChange(new Date("2000-01-01"))} />
   );
 });
 
-jest.mock('../components/ImageUploader', () => {
+jest.mock('../../components/ImageUploader', () => {
   const { Button } = require('react-native');
   return ({ onImageSelected, testID }) => (
     <Button testID={testID} title="Mock Upload" onPress={() => onImageSelected("file://mock-image.jpg")} />
   );
 });
 
-jest.mock('../components/BrandLogo', () => 'BrandLogo');
-jest.mock('../components/ScreenWrapper', () => ({ children }) => children);
+jest.mock('../../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/ScreenWrapper', () => ({ children }) => children);
 
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 const renderWithContext = (component, contextOverrides = {}) => {
   const defaultContext = { setAuthStatus: jest.fn() };
   return render(

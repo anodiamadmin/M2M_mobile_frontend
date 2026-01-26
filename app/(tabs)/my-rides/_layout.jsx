@@ -4,7 +4,7 @@ export default function MyRidesLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="filter" />
+      <Stack.Screen name="booking-filter" />
     </Stack>
   );
 }

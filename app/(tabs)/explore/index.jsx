@@ -1,5 +1,5 @@
-import { View } from "react-native";
 import Label from "@components/Label";
+import { View } from "react-native";
 
 export default function Explore() {
   return (

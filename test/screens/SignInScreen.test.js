@@ -1,10 +1,10 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import SignIn from '../app/(auth)/signin';
-import { AuthStatus } from '../constants/types';
-import { AuthContext } from '../context/AuthContext';
-import { useIntent } from '../hooks/useIntent';
-import { authService } from '../services/authService';
+import SignIn from '../../app/(auth)/signin';
+import { AuthStatus } from '../../constants/types';
+import { AuthContext } from '../../context/AuthContext';
+import { useIntent } from '../../hooks/useIntent';
+import { authService } from '../../services/authService';
 
 // ✅ Mock SecureStore (Required because SignIn calls setItemAsync)
 jest.mock('expo-secure-store', () => ({
@@ -21,30 +21,30 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-jest.mock('../hooks/useIntent', () => ({
+jest.mock('../../hooks/useIntent', () => ({
   useIntent: jest.fn(), 
 }));
 
-jest.unmock('../context/AuthContext'); 
+jest.unmock('../../context/AuthContext'); 
 
-jest.mock('../services/authService', () => ({
+jest.mock('../../services/authService', () => ({
   authService: { login: jest.fn() },
 }));
 
-jest.mock('../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
-jest.mock('../components/BrandLogo', () => 'BrandLogo');
-jest.mock('../components/Label', () => 'Label');
-jest.mock('../components/TextField', () => 'TextField');
-jest.mock('../components/EmailInput', () => {
+jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
+jest.mock('../../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/Label', () => 'Label');
+jest.mock('../../components/TextField', () => 'TextField');
+jest.mock('../../components/EmailInput', () => {
   const { TextInput } = require('react-native');
   return (props) => <TextInput {...props} />;
 });
-jest.mock('../components/PasswordInput', () => {
+jest.mock('../../components/PasswordInput', () => {
   const { TextInput } = require('react-native');
   return (props) => <TextInput {...props} />;
 });
 
-jest.mock('../components/Button', () => {
+jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ title, onPress, testID, disabled }) => (
     <TouchableOpacity testID={testID} onPress={onPress} disabled={disabled}>
@@ -53,7 +53,7 @@ jest.mock('../components/Button', () => {
   );
 });
 
-jest.mock('../components/ActionRow', () => {
+jest.mock('../../components/ActionRow', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ actionText, onActionPress }) => (
     <TouchableOpacity onPress={onActionPress}>

@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import Landing from '../app/landing';
+import Landing from '../../app/landing';
 
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
@@ -13,16 +13,16 @@ jest.mock('react-native-safe-area-context', () => ({
 const mockSetRentIntent = jest.fn();
 const mockSetListIntent = jest.fn();
 
-jest.mock('../hooks/useIntent', () => ({
+jest.mock('../../hooks/useIntent', () => ({
   useIntent: () => ({
     setRentIntent: mockSetRentIntent,
     setListIntent: mockSetListIntent,
   }),
 }));
 
-jest.mock('../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
-jest.mock('../components/Label', () => 'Label');
-jest.mock('../components/Button', () => {
+jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
+jest.mock('../../components/Label', () => 'Label');
+jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ title, onPress, testID }) => (
     <TouchableOpacity testID={testID} onPress={onPress}>

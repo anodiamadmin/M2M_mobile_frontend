@@ -2,10 +2,10 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // ngrok URL for https local dev
-const BASE_URL = 'https://nonmechanistic-hypersystolic-chung.ngrok-free.dev';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BASE_URL,  
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

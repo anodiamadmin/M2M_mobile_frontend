@@ -34,6 +34,12 @@ npm run web
 
 # Happy Coding!
 
+# To connect to backend:
+
+5. Put your device's IPv4 address like this http://your-IP:8000 in `EXPO_PUBLIC_API_URL` of **.env**
+
+# Alternative way:
+
 5. Run:
 ```bash
 npx ngrok http 8000 
@@ -42,6 +48,6 @@ to start ngrok secure tunnel for connecting to backend
 
 6. Copy the link "https://your-instance-id.ngrok-free.app" you get to see in the ngrok terminal.
 
-7. Paste the "https://your-instance-id.ngrok-free.app" in `BASE_URL` of **services\apiClient.js**
+7. Paste the "https://your-instance-id.ngrok-free.app" in `EXPO_PUBLIC_API_URL` of **.env**
 
 # You are ready to connect!

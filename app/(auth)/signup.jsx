@@ -24,7 +24,6 @@ export default function SignUp() {
   const router = useRouter();
   const { setAuthStatus } = useContext(AuthContext);
   const { resolveIntent } = useIntent(); 
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,14 +84,9 @@ export default function SignUp() {
     try {
       const dobString = dob.toISOString().split('T')[0];
       const response = await authService.register(name, email, password, dobString);
-
       if (response.access_token) {
         await SecureStore.setItemAsync('user_token', response.access_token);
-        
-        // Update Auth Context
         setAuthStatus(AuthStatus.AUTHENTICATED);
-
-        // ✅ REFACTORED: Let the hook decide where to go
         resolveIntent();
       }
     } catch (error) {
@@ -122,7 +116,7 @@ export default function SignUp() {
 
         <View style={styles.form}>
           <TextField
-            testID="nameInput" // <--- ADDED
+            testID="nameInput"
             label="Full Name (as displayed on government ID)"
             value={name}
             onChangeText={setName}
@@ -130,7 +124,7 @@ export default function SignUp() {
           />
 
           <DatePicker 
-            testID="dobPicker" // <--- ADDED
+            testID="dobPicker"
             label="Date of Birth"
             value={dob}
             onChange={setDob}
@@ -143,14 +137,14 @@ export default function SignUp() {
           />
 
           <EmailInput 
-            testID="emailInput" // <--- ADDED
+            testID="emailInput"
             value={email}
             onChangeText={setEmail}
             label="Email (for receipts and rides)"
           />
 
           <PasswordInput
-            testID="passwordInput" // <--- ADDED
+            testID="passwordInput"
             label="Create Password"
             value={password}
             onChangeText={setPassword}
@@ -159,7 +153,7 @@ export default function SignUp() {
 
         <View style={styles.uploadSection}>
           <ImageUploader 
-            testID="idUploader" // <--- ADDED
+            testID="idUploader"
             label="Capture Govt. ID"
             activeLabel="ID Captured"
             icon="card-outline"
@@ -168,7 +162,7 @@ export default function SignUp() {
             aspect={[4, 3]}
           />
           <ImageUploader 
-            testID="selfieUploader" // <--- ADDED
+            testID="selfieUploader"
             label="Take Your Selfie"
             activeLabel="Selfie Taken"
             icon="camera-outline"
@@ -180,7 +174,7 @@ export default function SignUp() {
 
         <View style={styles.termsContainer}>
           <Checkbox 
-            testID="termsCheckbox" // <--- ADDED
+            testID="termsCheckbox"
             checked={agreed} 
             onPress={() => setAgreed(!agreed)} 
           />
@@ -198,7 +192,7 @@ export default function SignUp() {
 
         <View style={styles.actionSection}>
           <Button 
-            testID="signUpButton" // <--- ADDED
+            testID="signUpButton"
             title={getButtonTitle()} 
             variant="primary" 
             onPress={handleSignUp} 
@@ -210,7 +204,6 @@ export default function SignUp() {
             onActionPress={() => router.back()}
           />
         </View>
-
       </ScrollView>
     </ScreenWrapper>
   );

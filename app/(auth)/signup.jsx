@@ -54,7 +54,7 @@ export default function SignUp() {
       return;
     }
     if (!agreed) {
-      Alert.alert("Terms Required", "Please agree to the Terms & Conditions.");
+      Alert.alert("Agreement Required", "Please agree to the Terms & Conditions.");
       return;
     }
 
@@ -105,15 +105,17 @@ export default function SignUp() {
 
   return (
     <ScreenWrapper mode="scroll" statusBar="dark">
+      <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
+        <BrandLogo />
+        <Label variant="heading">Create account</Label>
+      </View>
+
       <ScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled" 
         keyboardDismissMode="on-drag"
       >
-        <BrandLogo />
-        <Label variant="heading">Sign up</Label>
-
         <View style={styles.form}>
           <TextField
             testID="nameInput"
@@ -212,9 +214,7 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
-    justifyContent: "center",
     paddingHorizontal: 24,
-    paddingTop: 20, 
     paddingBottom: 40,
   },
   form: {

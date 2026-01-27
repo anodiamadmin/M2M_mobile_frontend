@@ -1,18 +1,19 @@
-import { useContext, useState } from "react";
-import { View, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useContext, useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
 
-import ScreenWrapper from "@components/ScreenWrapper";
 import BrandLogo from "@components/BrandLogo";
-import Label from "@components/Label";
 import Button from "@components/Button";
+import Label from "@components/Label";
+import ScreenWrapper from "@components/ScreenWrapper";
 
 import DatePicker from "@components/DatePicker";
-import PriceRangeSlider from "@components/PriceRangeSlider";
 import Dropdown from "@components/Dropdown";
 import LocationSelector from "@components/LocationSelector";
+import PriceRangeSlider from "@components/PriceRangeSlider";
 
 import { AuthContext } from "../../../context/AuthContext";
+import { Colors } from "../../../theme/colors";
 
 const CATEGORY_OPTIONS = ["Road", "Mountain", "Hybrid", "Electric"];
 
@@ -41,7 +42,7 @@ export default function RenterBookingFilter() {
   };
 
   const handleMyBookings = () => {
-    router.push("/my-rides/booked-bikes");
+    router.push("/my-rides");
   };
 
   return (
@@ -49,11 +50,11 @@ export default function RenterBookingFilter() {
       <View style={styles.container}>
         <BrandLogo />
 
-        <Label size={24} bold style={styles.welcome}>
+        <Label variant='heading' color= {Colors.primary}>
           Welcome {user?.name}
         </Label>
 
-        <Label size={20} bold style={styles.heading}>
+        <Label variant='subheading' bold={false}>
           Book an E-Bike
         </Label>
 
@@ -77,7 +78,6 @@ export default function RenterBookingFilter() {
         </View>
 
         {/* ---- PRICE RANGE ---- */}
-        <Label style={styles.section}>Price range (per week)</Label>
         <PriceRangeSlider
           testID="price-slider"
           value={price}
@@ -120,24 +120,18 @@ export default function RenterBookingFilter() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-  },
-  welcome: {
-    marginTop: 16,
-  },
-  heading: {
-    marginVertical: 12,
-  },
+  },  
   section: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 0,
+    marginBottom: 0,
   },
   row: {
     flexDirection: "row",
     gap: 12,
+    marginTop: 10
   },
   column: {
     flex: 1,

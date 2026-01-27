@@ -18,7 +18,7 @@ export const useIntent = () => {
     if (authStatus === AuthStatus.AUTHENTICATED) {
       // User is logged in -> Go straight to destination
       if (intentType === EntryIntent.RENT) {
-        router.push("/(tabs)/my-rides/filter");
+        router.push("/(tabs)/my-rides/booking-filter");
       } else if (intentType === EntryIntent.LIST) {
         router.push("/(tabs)/my-bikes/list");
       }
@@ -42,7 +42,7 @@ export const useIntent = () => {
 
     // Priority 2: Entry Intents (Rent/List)
     if (entryIntent) {
-      const target = entryIntent === EntryIntent.RENT ? "/(tabs)/my-rides/filter" : 
+      const target = entryIntent === EntryIntent.RENT ? "/(tabs)/my-rides/booking-filter" : 
                      "/(tabs)/my-bikes/list";
       setEntryIntent(null); 
       router.replace(target);

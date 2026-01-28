@@ -1,53 +1,60 @@
 import { fireEvent, render } from '@testing-library/react-native';
-// ✅ Points to the future screen file
 import RenterBikeDetails from '../../app/(tabs)/my-rides/booking-bike-details';
 
-// --- MOCKS ---
+// ---------- MOCKS ----------
 
 jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
+
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
   return ({ children, ...props }) => <Text {...props}>{children}</Text>;
 });
 
-// Mock Expo Router
+// Navigation
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
   useLocalSearchParams: () => ({
     start: '2026-02-01',
     end: '2026-02-07',
-    loc: 'Sydney CBD'
+    loc: 'Sydney CBD',
   }),
 }));
 
-// Mock Button
+// Button
 jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return ({ title, onPress, variant, testID }) => (
-    <TouchableOpacity testID={testID} onPress={onPress} accessibilityLabel={variant}>
+    <TouchableOpacity
+      testID={testID}
+      onPress={onPress}
+      accessibilityLabel={variant}
+    >
       <Text>{title}</Text>
     </TouchableOpacity>
   );
 });
 
-// Mock BikeCard (Crucial for testing variants)
+// Card
 jest.mock('../../components/Card', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
   return ({ title, variant, price, isVerified, testID, onPress }) => (
-    <TouchableOpacity testID={testID} onPress={onPress} accessibilityLabel={variant}>
+    <TouchableOpacity
+      testID={testID}
+      onPress={onPress}
+      accessibilityLabel={variant}
+    >
       <View>
         <Text>{title}</Text>
         <Text>${price}/week</Text>
         {isVerified && <Text testID="verified-badge">Verified</Text>}
-        {/* Helper text for variant verification */}
-        <Text>Variant: {variant}</Text> 
+        <Text>Variant: {variant}</Text>
       </View>
     </TouchableOpacity>
   );
 });
 
-// Mock FlatList for Similar Bikes
+// FlatList
 jest.mock('react-native/Libraries/Lists/FlatList', () => {
   const { View } = require('react-native');
   return ({ testID, data, renderItem }) => (
@@ -61,72 +68,70 @@ jest.mock('react-native/Libraries/Lists/FlatList', () => {
   );
 });
 
+// ---------- TEST SUITE ----------
 
-describe('RenterBookingBikesDetails Screen', () => {
+describe('RenterBikeDetails Screen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  // --- RENDERING TESTS ---
+  // ---------- RENDERING ----------
 
-  it('1. Renders the page header with location context', () => {
+  it('1. Renders header and location context', () => {
     const { getByText } = render(<RenterBikeDetails />);
-    expect(getByText(/Top Pick for You/i)).toBeTruthy();
-    expect(getByText(/Sydney CBD/i)).toBeTruthy();
+    expect(getByText('Top Pick for You')).toBeTruthy();
+    expect(getByText('Sydney CBD')).toBeTruthy();
   });
 
-  it('2. Renders the main Highlight Card with correct variant', () => {
-    const { getByTestId, getByText } = render(<RenterBikeDetails />);
-    
-    // Check main card existence
-    const mainCard = getByTestId('highlight-bike-card');
-    
-    // Verify variant prop was passed
-    expect(getByText(/Variant: highlightBikeCard/i)).toBeTruthy();
-  });
-
-  it('3. Renders "Cheapest" label if applicable', () => {
-    const { getByText } = render(<RenterBikeDetails />);
-    expect(getByText(/Cheapest/i)).toBeTruthy();
-  });
-
-  it('4. Renders "Book This E-Bike" button with primary styling', () => {
-    const { getByTestId } = render(<RenterBikeDetails />);
-    const bookButton = getByTestId('book-now-button');
-    
-    expect(bookButton).toBeTruthy();
-    expect(bookButton.props.accessibilityLabel).toBe('primary');
-  });
-
-  it('5. Renders "Similar E-Bikes" section and list', () => {
+  it('2. Renders highlight bike card with correct variant', () => {
     const { getByText, getByTestId } = render(<RenterBikeDetails />);
-    expect(getByText(/Similar E-Bikes/i)).toBeTruthy();
+    expect(getByTestId('highlight-bike-card')).toBeTruthy();
+    expect(getByText('Variant: highlightBikeCard')).toBeTruthy();
+  });
+
+  it('3. Shows "Cheapest" label when bike is cheapest', () => {
+    const { getByText } = render(<RenterBikeDetails />);
+    expect(getByText('Cheapest')).toBeTruthy();
+  });
+
+  it('4. Renders Book button with primary variant', () => {
+    const { getByTestId } = render(<RenterBikeDetails />);
+    const btn = getByTestId('book-now-button');
+    expect(btn).toBeTruthy();
+    expect(btn.props.accessibilityLabel).toBe('primary');
+  });
+
+  it('5. Renders Similar Bikes list', () => {
+    const { getByText, getByTestId } = render(<RenterBikeDetails />);
+    expect(getByText('Similar E-Bikes')).toBeTruthy();
     expect(getByTestId('similar-bikes-list')).toBeTruthy();
   });
 
-  // --- NAVIGATION TESTS ---
+  // ---------- NAVIGATION ----------
 
-  it('6. Navigates to Confirmation screen when Book button is pressed', () => {
+  it('6. Navigates to confirmation screen on Book button press', () => {
     const { getByTestId } = render(<RenterBikeDetails />);
     fireEvent.press(getByTestId('book-now-button'));
-    
-    expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({
-      pathname: expect.stringContaining('booking-confirmation')
-    }));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/my-rides/booking-confirmation',
+      params: {
+        start: '2026-02-01',
+        end: '2026-02-07',
+        loc: 'Sydney CBD',
+      },
+    });
   });
 
-  it('7. Navigates to details when a Similar Bike is pressed', () => {
+  it('7. Navigates to confirmation screen when similar bike is pressed', () => {
     const { getAllByTestId } = render(<RenterBikeDetails />);
-    
-    // Get all similar cards
+
     const cards = getAllByTestId('similar-bike-card');
-    
-    if (cards.length > 0) {
-      fireEvent.press(cards[0]);
-      // Expect it to push to the same route (bike-details)
-      expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({
-        pathname: expect.stringContaining('bike-details')
-      }));
-    }
+    fireEvent.press(cards[0]);
+
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/my-rides/booking-confirmation',
+      params: { id: '2' },
+    });
   });
 });

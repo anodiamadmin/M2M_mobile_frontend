@@ -7,7 +7,7 @@ import Button from "@components/Button";
 import Label from "@components/Label";
 import ScreenWrapper from "@components/ScreenWrapper";
 
-import DatePicker from "@components/DatePicker";
+import DateRangePicker from "@components/DateRangePicker";
 import Dropdown from "@components/Dropdown";
 import LocationSelector from "@components/LocationSelector";
 import PriceRangeSlider from "@components/PriceRangeSlider";
@@ -38,7 +38,7 @@ export default function RenterBookingFilter() {
       return;
     }
 
-    router.push("/my-rides/bike-details");
+    router.push("/my-rides/booking-bike-details");
   };
 
   const handleMyBookings = () => {
@@ -61,20 +61,18 @@ export default function RenterBookingFilter() {
         {/* ---- DATE RANGE ---- */}
         <View style={styles.row}>
           <View style={styles.column} testID="start-date-picker">
-            <DatePicker
-              label="From"
-              value={fromDate}
-              onChange={setFromDate}
+            {/* ---- DATE RANGE ---- */}
+            <DateRangePicker
+              fromLabel="From"
+              toLabel="To"
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromChange={setFromDate}
+              onToChange={setToDate}
             />
+
           </View>
 
-          <View style={styles.column} testID="end-date-picker">
-            <DatePicker
-              label="To"
-              value={toDate}
-              onChange={setToDate}
-            />
-          </View>
         </View>
 
         {/* ---- PRICE RANGE ---- */}
@@ -85,16 +83,17 @@ export default function RenterBookingFilter() {
         />
 
         {/* ---- CATEGORY ---- */}
-        <Label style={styles.section}>Category</Label>
+        <Label style={styles.section}></Label>
         <Dropdown
           testID="category-dropdown"
+          label="Category"
           options={CATEGORY_OPTIONS}
           value={category}
           onSelect={setCategory}
         />
 
         {/* ---- LOCATION ---- */}
-        <Label style={styles.section}>Pickup Location</Label>
+        <Label style={styles.section}></Label>
         <LocationSelector
           testID="location-selector"
           value={location}
@@ -120,13 +119,13 @@ export default function RenterBookingFilter() {
   );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     padding: 16,
   },  
   section: {
-    marginTop: 0,
-    marginBottom: 0,
+    marginTop: -6,
+    marginBottom: -6,
   },
   row: {
     flexDirection: "row",

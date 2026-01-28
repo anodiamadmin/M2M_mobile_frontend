@@ -11,11 +11,12 @@ describe('PriceRangeSlider Component', () => {
 
   it('displays the correct min and max labels', () => {
     // Assuming the component takes min/max props to display labels
-    const { getByText } = render(
-      <PriceRangeSlider min={10} max={100} />
+    render(
+      <PriceRangeSlider min={10} max={500}/>
     );
-    expect(getByText('$10')).toBeTruthy();
-    expect(getByText('$100')).toBeTruthy();
+    expect(getByTestId('min-price')).toHaveTextContent('10');
+    expect(getByTestId('max-price')).toHaveTextContent('500');
+
   });
 
   it('calls onValueChange when interaction occurs', () => {

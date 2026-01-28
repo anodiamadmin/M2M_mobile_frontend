@@ -87,7 +87,7 @@ export default function LocationSelector({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 20, // To be deleted
   },
   label: {
     marginBottom: 8,

@@ -1,15 +1,18 @@
 import React, { useContext } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 
 import ScreenWrapper from "../../../components/ScreenWrapper";
 import BrandLogo from "../../../components/BrandLogo";
 import Label from "../../../components/Label";
-import DatePicker from "../../../components/DatePicker";
 import CardCarousel from "../../../components/CardCarousel";
 import Button from "../../../components/Button";
 
 import { AuthContext } from "../../../context/AuthContext";
+import DateRangePicker from "@components/DateRangePicker";
+
+
 
 // --- MOCKED BOOKING DATA (used by tests) ---
 const BOOKINGS = [
@@ -27,13 +30,16 @@ export default function RenterBookedBikesList() {
   const { user } = useContext(AuthContext);
   const router = useRouter();
 
+  // ---- STATE ----
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
   const handleBookNewBike = () => {
-    router.push("booking-filter");
+    router.push("/my-rides/booking-filter");
   };
 
   const handleBookingPress = (item) => {
     router.push({
-      pathname: "booked-ride-details",
+      pathname: "/my-rides/booking-bike-details",
       params: { id: item.id },
     });
   };
@@ -52,10 +58,21 @@ export default function RenterBookedBikesList() {
           Your Bookings
         </Label>
 
-        {/* Date Filters */}
-        <View style={styles.filters}>
-          <DatePicker label="From" testID="from-date-picker" />
-          <DatePicker label="To" testID="to-date-picker" />
+        {/* ---- DATE RANGE ---- */}
+        <View style={styles.row}>
+          <View style={styles.column} testID="start-date-picker">
+            {/* ---- DATE RANGE ---- */}
+            <DateRangePicker
+              fromLabel="From"
+              toLabel="To"
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromChange={setFromDate}
+              onToChange={setToDate}
+            />
+
+          </View>
+
         </View>
 
         {/* Bookings Carousel */}
@@ -68,7 +85,7 @@ export default function RenterBookedBikesList() {
 
         {/* CTA */}
         <Button
-          title="Book a Bike"
+          title="Book a New E-Bike"
           testID="book-new-bike-button"
           variant="primary"
           onPress={handleBookNewBike}
@@ -96,5 +113,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 10
+  },
+  column: {
+    flex: 1,
   },
 });

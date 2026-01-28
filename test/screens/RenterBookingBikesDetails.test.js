@@ -32,7 +32,7 @@ jest.mock('../../components/Button', () => {
 });
 
 // Mock BikeCard (Crucial for testing variants)
-jest.mock('../../components/BikeCard', () => {
+jest.mock('../../components/Card', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
   return ({ title, variant, price, isVerified, testID, onPress }) => (
     <TouchableOpacity testID={testID} onPress={onPress} accessibilityLabel={variant}>

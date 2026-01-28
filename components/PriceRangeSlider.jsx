@@ -4,33 +4,37 @@ import Label from "./Label";
 import { Colors } from "../theme/colors";
 
 export default function PriceRangeSlider({
-  min = 0,
+  min = 30,
   max = 500,
-  value = min,
+  value,
   step = 1,
   onValueChange,
   testID,
 }) {
   return (
-    <View style={styles.container} testID={testID} onValueChange={onValueChange}>
+    <View
+      style={styles.container}
+      testID={testID}
+      onValueChange={onValueChange}
+    >
+      {/* Header */}
       <View style={styles.header}>
         <Label variant="label">Price range (per week)</Label>
-        <Label color={Colors.primary} style={styles.value}>
-          ${value}
-        </Label>
       </View>
 
+      {/* Slider */}
       <Slider
         minimumValue={min}
         maximumValue={max}
         step={step}
-        value={value}
+        value={value ?? min}
         minimumTrackTintColor={Colors.primary}
         maximumTrackTintColor={Colors.tabInactive}
         thumbTintColor={Colors.primary}
         onValueChange={onValueChange}
       />
 
+      {/* Min / Max Labels */}
       <View style={styles.labels}>
         <Label secondary>${min}</Label>
         <Label secondary>${max}</Label>
@@ -45,13 +49,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     marginBottom: 8,
     paddingHorizontal: 4,
-  },
-  value: {
-    fontWeight: "600",
   },
   labels: {
     flexDirection: "row",
@@ -60,4 +59,3 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
 });
-

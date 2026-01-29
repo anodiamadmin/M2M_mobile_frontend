@@ -145,5 +145,5 @@ const styles = StyleSheet.create({
   },
   statusText: { flex: 1, fontSize: 14, color: Colors.black, lineHeight: 20 },
   footer: { marginTop: 'auto', gap: 12 },
-  cancelBtn: { borderColor: '#EF4444' } // Red border for cancel
+  cancelBtn: { borderColor: Colors.red } // Red border for cancel
 });

@@ -1,5 +1,5 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import RenterBookingConfirmation from '../../app/(tabs)/my-rides/booking-confirmation';
 
@@ -12,6 +12,7 @@ const MOCK_BIKE = {
   price: 136,
   rating: 4.8,
   status: 'Available',
+  isVerified: true,
   supplier: {
     name: 'Urban Cycles',
     location: 'Sydney CBD',
@@ -62,6 +63,12 @@ jest.mock('../../components/Button', () => {
   );
 });
 
+// InfoModal & SupplierProfileView (UI-only)
+jest.mock('../../components/InfoModal', () => ({ children, visible }) =>
+  visible ? children : null
+);
+jest.mock('../../components/SupplierProfileView', () => () => null);
+
 // Icons
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
@@ -75,12 +82,12 @@ jest.mock('../../services/bikeService', () => ({
 }));
 
 // Router
-const mockPush = jest.fn();
+const mockReplace = jest.fn();
 const mockBack = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({
-    push: mockPush,
+    replace: mockReplace,
     back: mockBack,
   }),
   useLocalSearchParams: () => ({
@@ -120,7 +127,7 @@ describe('RenterBookingConfirmation Screen', () => {
 
   // ---------- INSURANCE FLOW ----------
 
-  it('3. Book button is disabled until insurance is accepted', async () => {
+  it('3. Confirm button is disabled until insurance is accepted', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
 
     await waitFor(() => {
@@ -128,25 +135,30 @@ describe('RenterBookingConfirmation Screen', () => {
     });
   });
 
-  it('4. Enables booking after insurance checkbox is pressed', async () => {
+  it('4. Enables confirmation after insurance checkbox is pressed', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
 
     await waitFor(() => {
       fireEvent.press(getByText('UNCHECKED'));
     });
 
-    expect(getByText('Book')).toBeTruthy();
+    expect(getByText('Confirm Booking')).toBeTruthy();
   });
 
-  it('5. Navigates to My Rides after booking', async () => {
+  it('5. Confirms booking and navigates to My Rides', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
 
     await waitFor(() => {
       fireEvent.press(getByText('UNCHECKED'));
     });
 
-    fireEvent.press(getByText('Book'));
+    fireEvent.press(getByText('Confirm Booking'));
 
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/my-rides');
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Success',
+      'E-Bike booked successfully!'
+    );
+
+    expect(mockReplace).toHaveBeenCalledWith('/(tabs)/my-rides');
   });
 });

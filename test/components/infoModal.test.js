@@ -1,8 +1,10 @@
+import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import InfoModal from '../../components/InfoModal';
 
-// --- MOCKS ---
+// ---------------- MOCKS ----------------
+
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
   return ({ children, ...props }) => <Text {...props}>{children}</Text>;
@@ -17,38 +19,40 @@ jest.mock('../../components/Button', () => {
   );
 });
 
+// ---------------- TEST SUITE ----------------
+
 describe('InfoModal Component', () => {
-  
-  it('renders the title prop correctly', () => {
+
+  it('1. Renders title when visible', () => {
     const { getByText } = render(
-      <InfoModal title="Terms of Service">
+      <InfoModal title="Info" visible>
         <Text>Content</Text>
       </InfoModal>
     );
-    expect(getByText('Terms of Service')).toBeTruthy();
+
+    expect(getByText('Info')).toBeTruthy();
   });
 
-  it('renders children content', () => {
+  it('2. Renders children content', () => {
     const { getByText } = render(
-      <InfoModal title="Title">
+      <InfoModal title="Info" visible>
         <Text>Specific Modal Details</Text>
       </InfoModal>
     );
+
     expect(getByText('Specific Modal Details')).toBeTruthy();
   });
 
-  it('renders the OK button and handles close interaction', () => {
+  it('3. Renders Close button and triggers onClose', () => {
     const mockOnClose = jest.fn();
+
     const { getByText } = render(
-      <InfoModal title="Title" onClose={mockOnClose}>
+      <InfoModal title="Info" visible onClose={mockOnClose}>
         <Text>Content</Text>
       </InfoModal>
     );
 
-    const button = getByText('OK');
-    expect(button).toBeTruthy();
-
-    fireEvent.press(button);
+    fireEvent.press(getByText('Close'));
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 });

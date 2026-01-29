@@ -1,16 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { memo } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { Colors } from "../theme/colors"; // ✅ Importing your palette
+import { Colors } from "../theme/colors";
 import Button from "./Button";
 import Label from "./Label";
+import VerifiedBadge from "./VerifiedBadge"; // ✅ Component integration
 
-// ✅ STRICT COLOR MAPPING
+// ✅ STRICT COLOR MAPPING for Status Badges
 const getBadgeColor = (text) => {
   if (!text) return Colors.primary;
   const t = text.toLowerCase();
   
-  // Map statuses to your palette
   if (t.includes("mint") || t.includes("active")) return Colors.success; 
   if (t.includes("excellent")) return Colors.secondary; 
   if (t.includes("like new")) return Colors.secondary; 
@@ -27,6 +27,7 @@ function Card({
   badgeText,
   rating,
   storeName,
+  isVerified, // ✅ Passed from MOCK_BIKES data via screen
   onBookPress,
   buttonTitle = "Book Ride",
   variant = "standard",
@@ -43,10 +44,10 @@ function Card({
         isHighlight ? styles.cardHighlight : styles.cardStandard
       ]}
     >
-      {/* Image Section */}
+      {/* --- IMAGE SECTION --- */}
       <View style={[
           styles.imageContainer, 
-          isHighlight && styles.imageContainerHighlight 
+          { height: isHighlight ? 180 : 150 } 
         ]}>
         <View style={styles.imageBackground}>
             {image && (
@@ -61,8 +62,10 @@ function Card({
         )}
       </View>
 
-      {/* Content Section */}
+      {/* --- CONTENT SECTION --- */}
       <View style={[styles.content, isHighlight && styles.contentHighlight]}>
+        
+        {/* Title & Rating */}
         <View style={styles.headerRow}>
             <Label style={[styles.title, isHighlight && styles.titleHighlight]} numberOfLines={1}>
                 {title}
@@ -75,18 +78,34 @@ function Card({
             )}
         </View>
 
+        {/* Category Label */}
         <Label style={styles.subtitle} numberOfLines={1}>{subtitle}</Label>
 
+        {/* ✅ UPDATED STORE ROW: Integrated VerifiedBadge */}
         {storeName && (
           <View style={styles.storeRow}>
-            <Ionicons name="business" size={14} color={Colors.placeholderTextColor} />
-            <Label style={styles.storeText} numberOfLines={1}>{storeName}</Label>
+            <View style={styles.storeInfo}>
+                <Ionicons name="business" size={14} color={Colors.placeholderTextColor} />
+                <Label style={styles.storeText} numberOfLines={1}>
+                  {storeName}
+                </Label>
+            </View>
+            
+            {/* Logic is inside VerifiedBadge: it returns null if isVerified is false */}
+            <VerifiedBadge 
+                isVerified={isVerified} 
+                type="supplier" 
+                size="small" 
+                showText={true} 
+                style={styles.badgeOverride}
+            />
           </View>
         )}
 
+        {/* Footer: Price & Action */}
         <View style={styles.footerRow}>
           <View>
-            <Text style={[styles.priceText, isHighlight && styles.priceTextHighlight]}>
+            <Text style={[styles.priceText, { fontSize: isHighlight ? 24 : 20 }]}>
               ${price} <Text style={styles.perWeekText}>/week</Text>
             </Text>
           </View>
@@ -95,7 +114,6 @@ function Card({
             title={buttonTitle}
             onPress={onBookPress}
             textSize={13} 
-            // We pass "primary" variant to Button, but override layout here
             variant="primary" 
             style={isHighlight ? styles.customButtonHighlight : styles.customButton} 
           />
@@ -107,7 +125,7 @@ function Card({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.black, // ✅ Dark Premium Card
+    backgroundColor: Colors.black,
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: Colors.black,
@@ -116,7 +134,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
     borderWidth: 1,
-    borderColor: Colors.borderDark, // Subtle border
+    borderColor: Colors.borderDark,
   },
   cardStandard: {
     width: 280, 
@@ -126,20 +144,16 @@ const styles = StyleSheet.create({
   cardHighlight: {
     width: "100%", 
     marginBottom: 24,
-    borderColor: Colors.border, // Slightly lighter border for highlight
+    borderColor: Colors.border,
   },
   imageContainer: {
-    height: 150, 
     width: "100%",
     position: 'relative',
-  },
-  imageContainerHighlight: {
-    height: 180, 
   },
   imageBackground: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#2C2C2C", // Dark grey fallback (not strictly in palette but neutral)
+    backgroundColor: "#2C2C2C",
   },
   image: {
     width: "100%",
@@ -198,7 +212,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 11,
-    color: Colors.placeholderTextColor, // ✅ Mapped
+    color: Colors.placeholderTextColor,
     textTransform: 'uppercase',
     fontWeight: '600',
     marginBottom: 8,
@@ -207,12 +221,23 @@ const styles = StyleSheet.create({
   storeRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between', // Pushes Badge to the right
     marginBottom: 16, 
+  },
+  storeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1, // Allows store name to take available space
   },
   storeText: {
     fontSize: 12,
-    color: Colors.placeholderTextColor, // ✅ Mapped
+    color: Colors.placeholderTextColor,
     marginLeft: 6,
+    marginRight: 8,
+  },
+  badgeOverride: {
+    paddingVertical: 2,
+    paddingHorizontal: 6,
   },
   footerRow: {
     flexDirection: 'row',
@@ -220,12 +245,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceText: {
-    fontSize: 20,
     fontWeight: '700',
-    color: Colors.primary, // ✅ Uses your Purple
-  },
-  priceTextHighlight: {
-    fontSize: 24, 
+    color: Colors.primary,
   },
   perWeekText: {
     fontSize: 12,

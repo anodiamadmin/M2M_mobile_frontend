@@ -10,16 +10,17 @@ export const BikeType = {
 };
 
 // 2. Define Imaginary Suppliers
+// Added isVerified here for supplier-level trust
 const SUPPLIERS = [
-  { id: "sup-1", name: "VoltFleet Sydney", location: "Sydney CBD" },
-  { id: "sup-2", name: "E-Motion Rentals", location: "Kensington" },
-  { id: "sup-3", name: "GreenWheelz", location: "Bondi Junction" },
-  { id: "sup-4", name: "Urban Rider Co.", location: "Surry Hills" }
+  { id: "sup-1", name: "VoltFleet Sydney", location: "Sydney CBD", isVerified: true },
+  { id: "sup-2", name: "E-Motion Rentals", location: "Kensington", isVerified: true },
+  { id: "sup-3", name: "GreenWheelz", location: "Bondi Junction", isVerified: false },
+  { id: "sup-4", name: "Urban Rider Co.", location: "Surry Hills", isVerified: false }
 ];
 
-// 3. The Master List (20 Bikes)
+// 3. The Master List (20 Bikes: 10 Verified, 10 Not Verified)
 export const MOCK_BIKES = [
-  // --- GROUP A: Top Rated ---
+  // --- GROUP A: Verified (10 Bikes) ---
   {
     id: "b1",
     title: "Apex Predator X1",
@@ -30,7 +31,7 @@ export const MOCK_BIKES = [
     endDate: "2026-02-10",
     meta: "Jan 28 - Feb 10",
     type: BikeType.MOUNTAIN,
-    isVerified: true,
+    isVerified: true, // 1
     rating: 4.9,
     reviewCount: 42,
     image: require("../assets/images/SplashLogo.png"), 
@@ -47,7 +48,7 @@ export const MOCK_BIKES = [
     endDate: "2026-02-20",
     meta: "Feb 15 - Feb 20",
     type: BikeType.CARGO,
-    isVerified: true,
+    isVerified: true, // 2
     rating: 5.0,
     reviewCount: 15,
     image: require("../assets/images/SplashLogo.png"),
@@ -64,7 +65,7 @@ export const MOCK_BIKES = [
     endDate: "2026-02-07",
     meta: "Feb 01 - Feb 07",
     type: BikeType.ROAD,
-    isVerified: true,
+    isVerified: true, // 3
     rating: 4.8,
     reviewCount: 89,
     image: require("../assets/images/SplashLogo.png"),
@@ -81,7 +82,7 @@ export const MOCK_BIKES = [
     endDate: "2026-03-05",
     meta: "Mar 01 - Mar 05",
     type: BikeType.CITY,
-    isVerified: true,
+    isVerified: true, // 4
     rating: 4.9,
     reviewCount: 120,
     image: require("../assets/images/SplashLogo.png"),
@@ -98,15 +99,13 @@ export const MOCK_BIKES = [
     endDate: "2026-02-15",
     meta: "Feb 10 - Feb 15",
     type: BikeType.MOUNTAIN,
-    isVerified: true,
+    isVerified: true, // 5
     rating: 4.8,
     reviewCount: 34,
     image: require("../assets/images/SplashLogo.png"),
     supplier: SUPPLIERS[0],
     features: { battery: true, brakes: true, lights: true, tyres: true }
   },
-
-  // --- GROUP B: Mid Range ---
   {
     id: "b6",
     title: "City Commuter 300",
@@ -117,28 +116,11 @@ export const MOCK_BIKES = [
     endDate: "2026-03-20",
     meta: "Mar 10 - Mar 20",
     type: BikeType.CITY,
-    isVerified: true,
+    isVerified: true, // 6
     rating: 4.5,
     reviewCount: 210,
     image: require("../assets/images/SplashLogo.png"),
     supplier: SUPPLIERS[1],
-    features: { battery: true, brakes: true, lights: true, tyres: true }
-  },
-  {
-    id: "b7",
-    title: "Hybrid Explorer",
-    subtitle: "$105/week",
-    price: 105,
-    status: "Active",
-    startDate: "2026-02-05",
-    endDate: "2026-02-12",
-    meta: "Feb 05 - Feb 12",
-    type: BikeType.HYBRID,
-    isVerified: false,
-    rating: 4.3,
-    reviewCount: 56,
-    image: require("../assets/images/SplashLogo.png"),
-    supplier: SUPPLIERS[2],
     features: { battery: true, brakes: true, lights: true, tyres: true }
   },
   {
@@ -151,7 +133,7 @@ export const MOCK_BIKES = [
     endDate: "2026-04-10",
     meta: "Apr 01 - Apr 10",
     type: BikeType.ROAD,
-    isVerified: true,
+    isVerified: true, // 7
     rating: 4.6,
     reviewCount: 78,
     image: require("../assets/images/SplashLogo.png"),
@@ -168,11 +150,64 @@ export const MOCK_BIKES = [
     endDate: "2026-03-22",
     meta: "Mar 15 - Mar 22",
     type: BikeType.CARGO,
-    isVerified: true,
+    isVerified: true, // 8
     rating: 4.4,
     reviewCount: 12,
     image: require("../assets/images/SplashLogo.png"),
     supplier: SUPPLIERS[0],
+    features: { battery: true, brakes: true, lights: true, tyres: true }
+  },
+  {
+    id: "b11",
+    title: "Metro Zoom",
+    subtitle: "$85/week",
+    price: 85,
+    status: "Upcoming",
+    startDate: "2026-03-05",
+    endDate: "2026-03-12",
+    meta: "Mar 05 - Mar 12",
+    type: BikeType.CITY,
+    isVerified: true, // 9
+    rating: 4.7,
+    reviewCount: 300,
+    image: require("../assets/images/SplashLogo.png"),
+    supplier: SUPPLIERS[2],
+    features: { battery: true, brakes: true, lights: true, tyres: true }
+  },
+  {
+    id: "b13",
+    title: "Speedster 2000",
+    subtitle: "$160/week",
+    price: 160,
+    status: "Upcoming",
+    startDate: "2026-02-25",
+    endDate: "2026-03-01",
+    meta: "Feb 25 - Mar 01",
+    type: BikeType.ROAD,
+    isVerified: true, // 10
+    rating: 4.5,
+    reviewCount: 45,
+    image: require("../assets/images/SplashLogo.png"),
+    supplier: SUPPLIERS[0],
+    features: { battery: true, brakes: true, lights: true, tyres: true }
+  },
+
+  // --- GROUP B: Not Verified (10 Bikes) ---
+  {
+    id: "b7",
+    title: "Hybrid Explorer",
+    subtitle: "$105/week",
+    price: 105,
+    status: "Active",
+    startDate: "2026-02-05",
+    endDate: "2026-02-12",
+    meta: "Feb 05 - Feb 12",
+    type: BikeType.HYBRID,
+    isVerified: false,
+    rating: 4.3,
+    reviewCount: 56,
+    image: require("../assets/images/SplashLogo.png"),
+    supplier: SUPPLIERS[2],
     features: { battery: true, brakes: true, lights: true, tyres: true }
   },
   {
@@ -193,23 +228,6 @@ export const MOCK_BIKES = [
     features: { battery: true, brakes: true, lights: true, tyres: true }
   },
   {
-    id: "b11",
-    title: "Metro Zoom",
-    subtitle: "$85/week",
-    price: 85,
-    status: "Upcoming",
-    startDate: "2026-03-05",
-    endDate: "2026-03-12",
-    meta: "Mar 05 - Mar 12",
-    type: BikeType.CITY,
-    isVerified: true,
-    rating: 4.7,
-    reviewCount: 300,
-    image: require("../assets/images/SplashLogo.png"),
-    supplier: SUPPLIERS[2],
-    features: { battery: true, brakes: true, lights: true, tyres: true }
-  },
-  {
     id: "b12",
     title: "Weekend Warrior",
     subtitle: "$115/week",
@@ -227,23 +245,6 @@ export const MOCK_BIKES = [
     features: { battery: true, brakes: true, lights: true, tyres: true }
   },
   {
-    id: "b13",
-    title: "Speedster 2000",
-    subtitle: "$160/week",
-    price: 160,
-    status: "Upcoming",
-    startDate: "2026-02-25",
-    endDate: "2026-03-01",
-    meta: "Feb 25 - Mar 01",
-    type: BikeType.ROAD,
-    isVerified: true,
-    rating: 4.5,
-    reviewCount: 45,
-    image: require("../assets/images/SplashLogo.png"),
-    supplier: SUPPLIERS[0],
-    features: { battery: true, brakes: true, lights: true, tyres: true }
-  },
-  {
     id: "b14",
     title: "Grocery Getter",
     subtitle: "$175/week",
@@ -253,7 +254,7 @@ export const MOCK_BIKES = [
     endDate: "2026-02-14",
     meta: "Feb 12 - Feb 14",
     type: BikeType.CARGO,
-    isVerified: true,
+    isVerified: false,
     rating: 4.6,
     reviewCount: 18,
     image: require("../assets/images/SplashLogo.png"),
@@ -277,8 +278,6 @@ export const MOCK_BIKES = [
     supplier: SUPPLIERS[2],
     features: { battery: true, brakes: true, lights: true, tyres: true }
   },
-
-  // --- GROUP C: Budget / Older ---
   {
     id: "b16",
     title: "Budget Beater",

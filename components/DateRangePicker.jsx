@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import DatePicker from "./DatePicker";
 
 export default function DateRangePicker({

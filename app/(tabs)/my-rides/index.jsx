@@ -8,11 +8,12 @@ import Card from "../../../components/Card";
 import CardCarousel from "../../../components/CardCarousel";
 import Label from "../../../components/Label";
 import ScreenWrapper from "../../../components/ScreenWrapper";
+import ScrollHint from "../../../components/ScrollHint";
 
 import DateRangePicker from "../../../components/DateRangePicker";
 import { AuthContext } from "../../../context/AuthContext";
 import { bikeService } from "../../../services/bikeService";
-import { Colors } from "../../../theme/colors"; // ✅ Import Colors
+import { Colors } from "../../../theme/colors";
 
 export default function RenterBookedBikesList() {
   const { user } = useContext(AuthContext);
@@ -23,7 +24,9 @@ export default function RenterBookedBikesList() {
   const [allBookings, setAllBookings] = useState([]); 
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
+  // 1. Fetch Data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -39,6 +42,7 @@ export default function RenterBookedBikesList() {
     loadData();
   }, []);
 
+  // 2. Filter Logic
   useEffect(() => {
     if (!fromDate && !toDate) {
       setFilteredBookings(allBookings);
@@ -57,13 +61,17 @@ export default function RenterBookedBikesList() {
     setFilteredBookings(results);
   }, [fromDate, toDate, allBookings]);
 
+  // 3. Scroll Detection
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    if (offsetY > 30 && !hasScrolled) {
+      setHasScrolled(true);
+    }
+  };
+
   const handleClearDates = useCallback(() => {
     setFromDate(null);
     setToDate(null);
-  }, []);
-
-  const handleBookNewBike = useCallback(() => {
-    router.push("/(tabs)/my-rides/booking-filter");
   }, []);
 
   const handleBookingPress = useCallback((item) => {
@@ -78,6 +86,7 @@ export default function RenterBookedBikesList() {
     });
   }, []);
 
+  // ✅ UPDATED: Added isVerified to the mapping logic
   const formatBookingForCard = (booking) => {
     let badge = booking.condition || booking.status || "";
     if (badge === "Available") badge = "Available Now";
@@ -91,6 +100,7 @@ export default function RenterBookedBikesList() {
       rating: booking.rating,
       badgeText: badge.toUpperCase(),
       storeName: booking.supplier?.name,
+      isVerified: booking.isVerified, // 🚀 PASSING THE FLAG
       originalData: booking 
     };
   };
@@ -106,100 +116,100 @@ export default function RenterBookedBikesList() {
   }, [filteredBookings, activeRide]);
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={styles.mainContainer}>
         
         <View style={styles.headerContainer}>
            <BrandLogo />
         </View>
 
-        <ScrollView 
-            showsVerticalScrollIndicator={false} 
-            contentContainerStyle={styles.scrollContent}
-        >
-            <Label variant="heading" style={styles.welcome}>
-              Welcome {user?.name?.split(' ')[0]}
-            </Label>
+        <View style={{ flex: 1 }}>
+          <ScrollView 
+              showsVerticalScrollIndicator={false} 
+              contentContainerStyle={styles.scrollContent}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+          >
+              <Label variant="heading" style={styles.welcome}>
+                Welcome {user?.name ? user.name.split(' ')[0] : "Sayan"}
+              </Label>
 
-            {!loading && activeRide && (
-                <View style={styles.highlightSection}>
-                    <Card
-                        {...activeRide}
-                        variant="highlight"
-                        buttonTitle="View Ride"
-                        onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
-                    />
-                </View>
-            )}
-
-            <View style={styles.listSection}>
-                <View style={styles.sectionHeader}>
-                    <Label variant="subheading" style={{ marginBottom: 4 }}>
-                        Your Booked E-Bikes
-                    </Label>
-
-                    {(fromDate || toDate) && (
-                        <Button 
-                            title="Clear Filter"
-                            variant="hyperlink"
-                            textSize={14}
-                            onPress={handleClearDates}
-                            style={{ padding: 0 }} 
-                        />
-                    )}
-                </View>
-
-                <View style={styles.filterRow}>
-                  <View style={styles.column} testID="start-date-picker">
-                    <DateRangePicker
-                      fromLabel="From"
-                      toLabel="To"
-                      fromDate={fromDate}
-                      toDate={toDate}
-                      onFromChange={setFromDate}
-                      onToChange={setToDate}
-                    />
+              {!loading && activeRide && (
+                  <View style={styles.highlightSection}>
+                      <Card
+                          {...activeRide}
+                          variant="highlight"
+                          buttonTitle="View Ride"
+                          onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
+                      />
                   </View>
-                </View>
+              )}
 
-                {loading ? (
-                   <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
-                ) : carouselData.length > 0 ? (
-                   <CardCarousel
-                     testID="bookings-carousel"
-                     data={carouselData}
-                     actionLabel="View Booking"
-                     onBookPress={(item) => handleBookingPress(item.originalData || item)}
-                   />
-                ) : (
-                   <View style={styles.emptyState}>
-                     <Label style={styles.emptyText}>
-                       {activeRide && !fromDate ? "No upcoming bookings." : "No bookings found for these dates."}
-                     </Label>
-                     {(fromDate || toDate) && (
-                         <Button
-                            title="View All"
-                            variant="hyperlink"
-                            textSize={14}
-                            onPress={handleClearDates}
-                            style={{ marginTop: 10 }}
-                         />
-                     )}
-                   </View>
-                )}
-            </View>
-            
-            <View style={{ height: 20 }} /> 
-        </ScrollView>
+              <View style={styles.listSection}>
+                  <View style={styles.sectionHeader}>
+                      <Label variant="subheading" style={{ marginBottom: 4 }}>
+                          Your Booked E-Bikes
+                      </Label>
 
-        <View style={styles.fixedFooter}>
-            <Button
-              title="Book a New E-Bike"
-              testID="book-new-bike-button"
-              variant="primary"
-              onPress={handleBookNewBike}
-              style={{ marginBottom: 0 }}
-            />
+                      {(fromDate || toDate) && (
+                          <Button 
+                              title="Clear Filter"
+                              variant="hyperlink"
+                              textSize={14}
+                              onPress={handleClearDates}
+                              style={{ padding: 0 }} 
+                          />
+                      )}
+                  </View>
+
+                  <View style={styles.filterRow}>
+                    <View style={styles.column}>
+                      <DateRangePicker
+                        fromDate={fromDate}
+                        toDate={toDate}
+                        onFromChange={setFromDate}
+                        onToChange={setToDate}
+                      />
+                    </View>
+                  </View>
+
+                  {loading ? (
+                      <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
+                  ) : carouselData.length > 0 ? (
+                      <CardCarousel
+                        data={carouselData}
+                        actionLabel="View Booking"
+                        onBookPress={(item) => handleBookingPress(item.originalData || item)}
+                      />
+                  ) : (
+                      <View style={styles.emptyState}>
+                        <Label style={styles.emptyText}>
+                          {activeRide && !fromDate ? "No upcoming bookings." : "No bookings found for these dates."}
+                        </Label>
+                        {(fromDate || toDate) && (
+                            <Button 
+                                title="View All"
+                                variant="hyperlink"
+                                textSize={14}
+                                onPress={handleClearDates}
+                                style={{ marginTop: 10 }}
+                            />
+                        )}
+                      </View>
+                  )}
+              </View>
+              
+              <Button
+                title="Book a New E-Bike"
+                variant="primary"
+                onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
+                style={styles.actionButton}
+              />
+
+              <View style={{ height: 20 }} /> 
+          </ScrollView>
+
+          <ScrollHint visible={!hasScrolled && carouselData.length > 0} />
         </View>
       </View>
     </ScreenWrapper>
@@ -207,64 +217,16 @@ export default function RenterBookedBikesList() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1, 
-    flexDirection: 'column',
-    backgroundColor: Colors.white, // ✅ Uses Colors
-  },
-  headerContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 5,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  welcome: {
-    marginTop: 8,
-    marginBottom: 20,
-    color: Colors.black, // ✅ Uses Colors
-  },
-  fixedFooter: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4, 
-    backgroundColor: Colors.white, // ✅ Uses Colors
-    borderTopWidth: 1,
-    borderTopColor: Colors.border, // ✅ Uses Colors
-  },
-  highlightSection: {
-    marginBottom: 24,
-  },
-  listSection: {
-    marginBottom: 10,
-  },
-  sectionHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    marginBottom: 8, 
-  },
-  filterRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  column: {
-    flex: 1,
-  },
-  emptyState: { 
-    height: 120, 
-    justifyContent: 'center', 
-    alignItems: 'center',
-    backgroundColor: Colors.surface, // ✅ Uses Colors
-    borderRadius: 12,
-    marginTop: 10,
-  },
-  emptyText: {
-    color: Colors.placeholderTextColor, // ✅ Uses Colors
-    fontSize: 14,
-  }
+  mainContainer: { flex: 1, backgroundColor: Colors.white },
+  headerContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 5 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
+  welcome: { marginTop: 8, marginBottom: 20, color: Colors.black },
+  highlightSection: { marginBottom: 24 },
+  listSection: { marginBottom: 20 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  filterRow: { flexDirection: "row", gap: 12, marginTop: 10, marginBottom: 10 },
+  column: { flex: 1 },
+  emptyState: { height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 12, marginTop: 10 },
+  emptyText: { color: Colors.placeholderTextColor, fontSize: 14 },
+  actionButton: { marginTop: 10, marginBottom: 10 }
 });

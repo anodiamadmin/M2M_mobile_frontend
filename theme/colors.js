@@ -14,4 +14,5 @@ export const Colors = {
   red: "#E53935",
   success: "#34C759",
   transparent: "transparent",
+  verified: "#15803D",
 };

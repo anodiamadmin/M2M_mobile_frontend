@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { memo } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Colors } from "../theme/colors";
 import Button from "./Button";
 import Label from "./Label";
-import VerifiedBadge from "./VerifiedBadge"; // ✅ Component integration
+import VerifiedBadge from "./VerifiedBadge";
 
-// ✅ STRICT COLOR MAPPING for Status Badges
 const getBadgeColor = (text) => {
   if (!text) return Colors.primary;
   const t = text.toLowerCase();
@@ -27,9 +26,10 @@ function Card({
   badgeText,
   rating,
   storeName,
-  isVerified, // ✅ Passed from MOCK_BIKES data via screen
+  isVerified,
   onBookPress,
-  buttonTitle = "Book Ride",
+  onSupplierPress, // ✅ New prop for modal trigger
+  buttonTitle,     // ✅ Now optional
   variant = "standard",
   testID,
 }) {
@@ -44,15 +44,10 @@ function Card({
         isHighlight ? styles.cardHighlight : styles.cardStandard
       ]}
     >
-      {/* --- IMAGE SECTION --- */}
-      <View style={[
-          styles.imageContainer, 
-          { height: isHighlight ? 180 : 150 } 
-        ]}>
+      {/* Image Section */}
+      <View style={[styles.imageContainer, { height: isHighlight ? 180 : 150 }]}>
         <View style={styles.imageBackground}>
-            {image && (
-                <Image source={image} style={styles.image} resizeMode="cover" />
-            )}
+            {image && <Image source={image} style={styles.image} resizeMode="cover" />}
         </View>
         
         {badgeText && (
@@ -62,10 +57,8 @@ function Card({
         )}
       </View>
 
-      {/* --- CONTENT SECTION --- */}
+      {/* Content Section */}
       <View style={[styles.content, isHighlight && styles.contentHighlight]}>
-        
-        {/* Title & Rating */}
         <View style={styles.headerRow}>
             <Label style={[styles.title, isHighlight && styles.titleHighlight]} numberOfLines={1}>
                 {title}
@@ -78,31 +71,30 @@ function Card({
             )}
         </View>
 
-        {/* Category Label */}
         <Label style={styles.subtitle} numberOfLines={1}>{subtitle}</Label>
 
-        {/* ✅ UPDATED STORE ROW: Integrated VerifiedBadge */}
+        {/* Store Row: Now Pressable for the "About Supplier" modal */}
         {storeName && (
           <View style={styles.storeRow}>
-            <View style={styles.storeInfo}>
+            <Pressable 
+              onPress={onSupplierPress} 
+              style={({ pressed }) => [styles.storeInfo, { opacity: pressed ? 0.7 : 1 }]}
+            >
                 <Ionicons name="business" size={14} color={Colors.placeholderTextColor} />
                 <Label style={styles.storeText} numberOfLines={1}>
                   {storeName}
                 </Label>
-            </View>
+            </Pressable>
             
-            {/* Logic is inside VerifiedBadge: it returns null if isVerified is false */}
             <VerifiedBadge 
                 isVerified={isVerified} 
-                type="supplier" 
                 size="small" 
-                showText={true} 
                 style={styles.badgeOverride}
             />
           </View>
         )}
 
-        {/* Footer: Price & Action */}
+        {/* Footer */}
         <View style={styles.footerRow}>
           <View>
             <Text style={[styles.priceText, { fontSize: isHighlight ? 24 : 20 }]}>
@@ -110,13 +102,16 @@ function Card({
             </Text>
           </View>
           
-          <Button 
-            title={buttonTitle}
-            onPress={onBookPress}
-            textSize={13} 
-            variant="primary" 
-            style={isHighlight ? styles.customButtonHighlight : styles.customButton} 
-          />
+          {/* ✅ FIXED: Only renders if buttonTitle is provided */}
+          {buttonTitle ? (
+            <Button 
+              title={buttonTitle}
+              onPress={onBookPress}
+              textSize={13} 
+              variant="primary" 
+              style={isHighlight ? styles.customButtonHighlight : styles.customButton} 
+            />
+          ) : null}
         </View>
       </View>
     </View>
@@ -136,135 +131,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderDark,
   },
-  cardStandard: {
-    width: 280, 
-    marginRight: 12,
-    marginBottom: 16,
-  },
-  cardHighlight: {
-    width: "100%", 
-    marginBottom: 24,
-    borderColor: Colors.border,
-  },
-  imageContainer: {
-    width: "100%",
-    position: 'relative',
-  },
-  imageBackground: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#2C2C2C",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
-  badge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  badgeText: {
-    color: Colors.white,
-    fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  content: {
-    padding: 14,
-  },
-  contentHighlight: {
-    padding: 16, 
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: Colors.white,
-    flex: 1,
-    marginRight: 8,
-  },
-  titleHighlight: {
-    fontSize: 20, 
-  },
-  ratingTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  ratingText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
-  subtitle: {
-    fontSize: 11,
-    color: Colors.placeholderTextColor,
-    textTransform: 'uppercase',
-    fontWeight: '600',
-    marginBottom: 8,
-    letterSpacing: 0.8,
-  },
-  storeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between', // Pushes Badge to the right
-    marginBottom: 16, 
-  },
-  storeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1, // Allows store name to take available space
-  },
-  storeText: {
-    fontSize: 12,
-    color: Colors.placeholderTextColor,
-    marginLeft: 6,
-    marginRight: 8,
-  },
-  badgeOverride: {
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceText: {
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  perWeekText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: Colors.placeholderTextColor,
-  },
-  customButton: {
-    width: 'auto',          
-    height: 38,             
-    paddingHorizontal: 20,  
-    marginVertical: 0,
-  },
-  customButtonHighlight: {
-    width: 'auto',
-    height: 44, 
-    paddingHorizontal: 24,
-    marginVertical: 0,
-  }
+  cardStandard: { width: 280, marginRight: 12, marginBottom: 16 },
+  cardHighlight: { width: "100%", marginBottom: 24, borderColor: Colors.border },
+  imageContainer: { width: "100%", position: 'relative' },
+  imageBackground: { width: "100%", height: "100%", backgroundColor: "#2C2C2C" },
+  image: { width: "100%", height: "100%" },
+  badge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
+  badgeText: { color: Colors.white, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  content: { padding: 14 },
+  contentHighlight: { padding: 16 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  title: { fontSize: 18, fontWeight: "700", color: Colors.white, flex: 1, marginRight: 8 },
+  titleHighlight: { fontSize: 20 },
+  ratingTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 },
+  ratingText: { color: Colors.white, fontSize: 12, fontWeight: '700', marginLeft: 4 },
+  subtitle: { fontSize: 11, color: Colors.placeholderTextColor, textTransform: 'uppercase', fontWeight: '600', marginBottom: 8 },
+  storeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  storeInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  storeText: { fontSize: 12, color: Colors.placeholderTextColor, marginLeft: 6, marginRight: 8 },
+  badgeOverride: { paddingVertical: 2, paddingHorizontal: 6 },
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  priceText: { fontWeight: '700', color: Colors.primary },
+  perWeekText: { fontSize: 12, fontWeight: '400', color: Colors.placeholderTextColor },
+  customButton: { width: 'auto', height: 38, paddingHorizontal: 20 },
+  customButtonHighlight: { width: 'auto', height: 44, paddingHorizontal: 24 }
 });
 
 export default memo(Card);

@@ -7,9 +7,11 @@ import BrandLogo from "../../../components/BrandLogo";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import Checkbox from "../../../components/Checkbox";
+import InfoModal from "../../../components/InfoModal";
 import Label from "../../../components/Label";
 import ScreenWrapper from "../../../components/ScreenWrapper";
-import ScrollHint from "../../../components/ScrollHint"; // ✅ Modular Component
+import ScrollHint from "../../../components/ScrollHint";
+import SupplierProfileView from "../../../components/SupplierProfileView";
 
 import { bikeService } from "../../../services/bikeService";
 import { Colors } from "../../../theme/colors";
@@ -22,8 +24,11 @@ export default function RenterBookingConfirmation() {
   const [loading, setLoading] = useState(true);
   const [insuranceAccepted, setInsuranceAccepted] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  
+  // ✅ MODAL STATES
+  const [isSupplierModalVisible, setSupplierModalVisible] = useState(false);
+  const [isInsuranceModalVisible, setInsuranceModalVisible] = useState(false);
 
-  // 1. Fetch Bike Details
   useEffect(() => {
     const fetchBike = async () => {
       try {
@@ -41,7 +46,6 @@ export default function RenterBookingConfirmation() {
     fetchBike();
   }, [bikeId]);
 
-  // 2. Hide Hint on Scroll
   const handleScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     if (offsetY > 30 && !hasScrolled) {
@@ -49,7 +53,6 @@ export default function RenterBookingConfirmation() {
     }
   };
 
-  // 3. Price Calculation
   const { weeks, totalPrice } = useMemo(() => {
     if (!from || !to || !bike) return { weeks: 0, totalPrice: 0 };
     const startDate = new Date(from);
@@ -71,7 +74,6 @@ export default function RenterBookingConfirmation() {
   }
 
   return (
-    // ✅ edges override fixes the "boundary" on top of the tab bar
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={styles.headerSpacing}>
         <BrandLogo />
@@ -94,6 +96,9 @@ export default function RenterBookingConfirmation() {
               image={bike.image}
               rating={bike.rating}
               badgeText={bike.status?.toUpperCase()} 
+              storeName={bike.supplier?.name}
+              isVerified={bike.isVerified}
+              onSupplierPress={() => setSupplierModalVisible(true)}
             />
           </View>
 
@@ -125,7 +130,7 @@ export default function RenterBookingConfirmation() {
               <Button 
                 title={`About ${bike.supplier?.name}`}
                 variant="hyperlink"
-                onPress={() => Alert.alert("Profile", "Supplier Profile Modal")}
+                onPress={() => setSupplierModalVisible(true)}
                 style={styles.hyperlinkButton}
                 textSize={16} 
               />
@@ -147,7 +152,7 @@ export default function RenterBookingConfirmation() {
                 variant="body" bold secondary
                 color={Colors.primary} 
                 style={{ textDecorationLine: 'underline' }}
-                onPress={() => Alert.alert("Insurance", "Policy details...")}
+                onPress={() => setInsuranceModalVisible(true)} // 🚀 Trigger Insurance Modal
               >
                 insurance
               </Label>
@@ -155,9 +160,12 @@ export default function RenterBookingConfirmation() {
           </View>
 
           <Button
-            title={insuranceAccepted ? "Book" : "Accept Insurance to Book"}
+            title={insuranceAccepted ? "Confirm Booking" : "Accept Insurance to Book"}
             variant="primary"
-            onPress={() => router.push("/(tabs)/my-rides")}
+            onPress={() => {
+              Alert.alert("Success", "E-Bike booked successfully!");
+              router.replace("/(tabs)/my-rides");
+            }}
             disabled={!insuranceAccepted}
             style={{ 
               marginTop: 10,
@@ -165,6 +173,41 @@ export default function RenterBookingConfirmation() {
             }}
           />
         </ScrollView>
+
+        {/* ✅ MODAL 1: Supplier Profile */}
+        <InfoModal 
+          visible={isSupplierModalVisible} 
+          title="Supplier Profile" 
+          onClose={() => setSupplierModalVisible(false)}
+        >
+          <SupplierProfileView supplier={bike.supplier} />
+        </InfoModal>
+
+        {/* ✅ MODAL 2: Insurance Details (Direct Inline Content) */}
+        <InfoModal 
+          visible={isInsuranceModalVisible} 
+          title="Insurance Policy" 
+          onClose={() => setInsuranceModalVisible(false)}
+        >
+          <View style={styles.insuranceContent}>
+             <Ionicons name="shield-checkmark" size={40} color={Colors.primary} style={styles.modalIcon} />
+             <Label bold style={styles.modalSubTitle}>Comprehensive Protection</Label>
+             <Label variant="body" style={styles.modalText}>
+                Our mandatory insurance covers you for accidental damage, third-party liability, and theft during your rental period.
+             </Label>
+             <View style={styles.bulletPoint}>
+                <Ionicons name="radio-button-on" size={8} color={Colors.primary} />
+                <Label style={styles.bulletText}>$100 Excess/Deductible on all claims.</Label>
+             </View>
+             <View style={styles.bulletPoint}>
+                <Ionicons name="radio-button-on" size={8} color={Colors.primary} />
+                <Label style={styles.bulletText}>24/7 Roadside assistance included.</Label>
+             </View>
+             <Label variant="caption" style={styles.disclaimer}>
+                Terms and conditions apply. Full policy document sent via email.
+             </Label>
+          </View>
+        </InfoModal>
 
         <ScrollHint visible={!hasScrolled} />
       </View>
@@ -185,4 +228,13 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: Colors.border, marginVertical: 20 },
   checkboxRow: { flexDirection: "row", alignItems: "center", marginBottom: 20, gap: 12 },
   checkboxLabel: { color: Colors.black, flex: 1 },
+  
+  // Modal Specific Styles
+  insuranceContent: { alignItems: 'center', paddingVertical: 10 },
+  modalIcon: { marginBottom: 10 },
+  modalSubTitle: { color: Colors.black, marginBottom: 8, fontSize: 16 },
+  modalText: { textAlign: 'center', color: Colors.black, marginBottom: 15, lineHeight: 18 },
+  bulletPoint: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: 6, gap: 8 },
+  bulletText: { color: Colors.black, fontSize: 13 },
+  disclaimer: { color: Colors.placeholderTextColor, marginTop: 15, textAlign: 'center', fontStyle: 'italic' }
 });

@@ -7,7 +7,7 @@ import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import Label from "../../../components/Label";
 import ScreenWrapper from "../../../components/ScreenWrapper";
-import ScrollHint from "../../../components/ScrollHint"; // ✅ Imported modular component
+import ScrollHint from "../../../components/ScrollHint";
 import { bikeService } from "../../../services/bikeService";
 import { Colors } from "../../../theme/colors";
 
@@ -17,9 +17,8 @@ export default function RenterBikeDetails() {
 
   const [bikes, setBikes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hasScrolled, setHasScrolled] = useState(false); // ✅ Added scroll state
+  const [hasScrolled, setHasScrolled] = useState(false); 
 
-  // 1. Fetch Data from Service
   useEffect(() => {
     const fetchBikes = async () => {
       try {
@@ -34,7 +33,6 @@ export default function RenterBikeDetails() {
     fetchBikes();
   }, []);
 
-  // 2. Filter & Sort Logic
   const sortedBikes = useMemo(() => {
     const filtered = bikes.filter(bike => {
       if (location) {
@@ -63,7 +61,6 @@ export default function RenterBikeDetails() {
     });
   };
 
-  // ✅ 3. Detect Scroll in FlatList
   const handleScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     if (offsetY > 30 && !hasScrolled) {
@@ -72,11 +69,9 @@ export default function RenterBikeDetails() {
   };
 
   return (
-    // ✅ Apply surgical override for Tab Navigation
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         
-        {/* HEADER */}
         <View style={styles.headerSpacing}>
             <BrandLogo />
         </View>
@@ -101,7 +96,7 @@ export default function RenterBikeDetails() {
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}
-                onScroll={handleScroll} // ✅ Listen for scroll
+                onScroll={handleScroll}
                 scrollEventThrottle={16}
                 
                 ListHeaderComponent={
@@ -110,12 +105,16 @@ export default function RenterBikeDetails() {
                         <Card
                             variant="highlight"
                             title={highlightBike.title}
-                            type={highlightBike.type} 
+                            subtitle={highlightBike.type} 
                             price={highlightBike.price}
                             image={highlightBike.image}
                             rating={highlightBike.rating}
                             badgeText={highlightBike.status?.toUpperCase()}
                             storeName={highlightBike.supplier?.name}
+                            
+                            // 🚀 KEY FIX: Passing isVerified to Highlight Card
+                            isVerified={highlightBike.isVerified} 
+                            
                             buttonTitle="Book This E-Bike"
                             onBookPress={() => handleBookPress(highlightBike)}
                         />
@@ -142,12 +141,16 @@ export default function RenterBikeDetails() {
                         <Card
                             variant="standard"
                             title={item.title}
-                            type={item.type}
+                            subtitle={item.type}
                             price={item.price}
                             image={item.image}
                             rating={item.rating}
                             badgeText={item.status?.toUpperCase()}
                             storeName={item.supplier?.name}
+                            
+                            // 🚀 KEY FIX: Passing isVerified to List Cards
+                            isVerified={item.isVerified} 
+                            
                             buttonTitle="Book"
                             onBookPress={() => handleBookPress(item)}
                         />
@@ -155,7 +158,6 @@ export default function RenterBikeDetails() {
                 )}
               />
 
-              {/* ✅ Show Hint only if there is "Similar" content and user hasn't scrolled yet */}
               <ScrollHint visible={!hasScrolled && similarBikes.length > 0} />
             </View>
         )}
@@ -165,45 +167,15 @@ export default function RenterBikeDetails() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  headerSpacing: {
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  titleContainer: {
-    marginBottom: 16,
-  },
-  headerText: {
-    color: Colors.black,
-  },
-  subHeader: {
-    color: Colors.placeholderTextColor,
-    marginTop: 4,
-  },
-  listContent: {
-    paddingBottom: 80, // ✅ Extra padding for ScrollHint and TabBar clearance
-  },
-  highlightWrapper: {
-    marginBottom: 24,
-  },
-  similarTitle: {
-    marginTop: 10,
-    marginBottom: 16,
-  },
-  cardWrapper: {
-    marginBottom: 16,
-    alignItems: 'center', 
-  },
-  emptyState: {
-    marginTop: 50,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.placeholderTextColor,
-    textAlign: 'center',
-  }
+  container: { flex: 1, paddingHorizontal: 16 },
+  headerSpacing: { marginTop: 10, marginBottom: 5 },
+  titleContainer: { marginBottom: 16 },
+  headerText: { color: Colors.black },
+  subHeader: { color: Colors.placeholderTextColor, marginTop: 4 },
+  listContent: { paddingBottom: 80 },
+  highlightWrapper: { marginBottom: 24 },
+  similarTitle: { marginTop: 10, marginBottom: 16 },
+  cardWrapper: { marginBottom: 16, alignItems: 'center' },
+  emptyState: { marginTop: 50, alignItems: 'center' },
+  emptyText: { fontSize: 16, color: Colors.placeholderTextColor, textAlign: 'center' }
 });

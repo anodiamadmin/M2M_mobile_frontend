@@ -74,19 +74,16 @@ export default function RenterBookedBikesList() {
     setToDate(null);
   }, []);
 
+  // ✅ UPDATED: Link to the new 'current-booking' command center
   const handleBookingPress = useCallback((item) => {
+    // We only need to pass the ID, the new screen fetches the status logic
     router.push({
-      pathname: "/(tabs)/my-rides/booked-ride-details",
-      params: { 
-        id: item.id,
-        status: (item.status || 'active').toLowerCase(),
-        title: item.title,
-        price: item.price
-      },
+      pathname: "/(tabs)/my-rides/current-booking",
+      params: { bikeId: item.id },
     });
   }, []);
 
-  // ✅ UPDATED: Added isVerified to the mapping logic
+  // ✅ Data Mapping (Clean, no hardcoded visual cues)
   const formatBookingForCard = (booking) => {
     let badge = booking.condition || booking.status || "";
     if (badge === "Available") badge = "Available Now";
@@ -100,16 +97,18 @@ export default function RenterBookedBikesList() {
       rating: booking.rating,
       badgeText: badge.toUpperCase(),
       storeName: booking.supplier?.name,
-      isVerified: booking.isVerified, // 🚀 PASSING THE FLAG
+      isVerified: booking.isVerified,
       originalData: booking 
     };
   };
 
+  // Logic to find the single "Active" ride to highlight
   const activeRide = useMemo(() => {
     const ride = allBookings.find(b => b.status === "Active");
     return ride ? formatBookingForCard(ride) : null;
   }, [allBookings]);
 
+  // Logic for the carousel (excludes the active ride if shown above)
   const carouselData = useMemo(() => {
     const rawList = filteredBookings.filter(b => b.id !== activeRide?.id);
     return rawList.map(formatBookingForCard);
@@ -134,17 +133,19 @@ export default function RenterBookedBikesList() {
                 Welcome {user?.name ? user.name.split(' ')[0] : "Sayan"}
               </Label>
 
+              {/* HIGHLIGHT SECTION: Active Ride */}
               {!loading && activeRide && (
                   <View style={styles.highlightSection}>
                       <Card
                           {...activeRide}
                           variant="highlight"
-                          buttonTitle="View Ride"
+                          buttonTitle="Manage Ride" // Changed text to reflect new dashboard nature
                           onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
                       />
                   </View>
               )}
 
+              {/* LIST SECTION: Upcoming Bookings */}
               <View style={styles.listSection}>
                   <View style={styles.sectionHeader}>
                       <Label variant="subheading" style={{ marginBottom: 4 }}>

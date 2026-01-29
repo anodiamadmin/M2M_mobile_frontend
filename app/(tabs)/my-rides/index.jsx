@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
@@ -6,23 +7,34 @@ import BrandLogo from "../../../components/BrandLogo";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import CardCarousel from "../../../components/CardCarousel";
+import DateRangePicker from "../../../components/DateRangePicker";
 import Label from "../../../components/Label";
 import ScreenWrapper from "../../../components/ScreenWrapper";
-import ScrollHint from "../../../components/ScrollHint";
 
-import DateRangePicker from "../../../components/DateRangePicker";
 import { AuthContext } from "../../../context/AuthContext";
 import { bikeService } from "../../../services/bikeService";
 import { Colors } from "../../../theme/colors";
+
+// ✅ Helper to format date as DD-MM-YYYY
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
 
 export default function RenterBookedBikesList() {
   const { user } = useContext(AuthContext);
   const router = useRouter();
 
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
   const [allBookings, setAllBookings] = useState([]); 
   const [filteredBookings, setFilteredBookings] = useState([]);
+  
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -44,6 +56,8 @@ export default function RenterBookedBikesList() {
 
   // 2. Filter Logic
   useEffect(() => {
+    if (allBookings.length === 0) return;
+
     if (!fromDate && !toDate) {
       setFilteredBookings(allBookings);
       return;
@@ -61,33 +75,22 @@ export default function RenterBookedBikesList() {
     setFilteredBookings(results);
   }, [fromDate, toDate, allBookings]);
 
-  // 3. Scroll Detection
-  const handleScroll = (event) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    if (offsetY > 30 && !hasScrolled) {
-      setHasScrolled(true);
-    }
-  };
-
-  const handleClearDates = useCallback(() => {
-    setFromDate(null);
-    setToDate(null);
-  }, []);
-
-  // ✅ UPDATED: Link to the new 'current-booking' command center
+  // 3. Helper Functions
   const handleBookingPress = useCallback((item) => {
-    // We only need to pass the ID, the new screen fetches the status logic
     router.push({
       pathname: "/(tabs)/my-rides/current-booking",
       params: { bikeId: item.id },
     });
   }, []);
 
-  // ✅ Data Mapping (Clean, no hardcoded visual cues)
-  const formatBookingForCard = (booking) => {
+  const formatBookingForCard = useCallback((booking) => {
     let badge = booking.condition || booking.status || "";
     if (badge === "Available") badge = "Available Now";
     
+    // ✅ Calculate formatted dates
+    const start = formatDate(booking.startDate);
+    const end = formatDate(booking.endDate);
+
     return {
       id: booking.id,
       title: booking.title,
@@ -98,120 +101,141 @@ export default function RenterBookedBikesList() {
       badgeText: badge.toUpperCase(),
       storeName: booking.supplier?.name,
       isVerified: booking.isVerified,
+      // ✅ Pass Location & Date Range
+      location: booking.supplier?.location || "Sydney, AU",
+      dateRange: `${start} to ${end}`,
       originalData: booking 
     };
-  };
+  }, []);
 
-  // Logic to find the single "Active" ride to highlight
   const activeRide = useMemo(() => {
     const ride = allBookings.find(b => b.status === "Active");
     return ride ? formatBookingForCard(ride) : null;
-  }, [allBookings]);
+  }, [allBookings, formatBookingForCard]);
 
-  // Logic for the carousel (excludes the active ride if shown above)
   const carouselData = useMemo(() => {
     const rawList = filteredBookings.filter(b => b.id !== activeRide?.id);
     return rawList.map(formatBookingForCard);
-  }, [filteredBookings, activeRide]);
+  }, [filteredBookings, activeRide, formatBookingForCard]);
 
+
+  // --- RENDER HELPERS ---
+
+  const renderEmptyState = () => (
+    <View style={styles.zeroStateContainer}>
+      <View style={styles.zeroStateIconCircle}>
+        <Ionicons name="bicycle" size={60} color={Colors.primary} />
+      </View>
+      <Label variant="heading" style={styles.zeroStateTitle}>No Rides Yet</Label>
+      <Label variant="body" style={styles.zeroStateText}>
+        You haven't booked any e-bikes. Start your journey by finding the perfect ride near you.
+      </Label>
+      <Button
+        title="Find an E-Bike"
+        variant="primary"
+        onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
+        style={styles.zeroStateButton}
+      />
+    </View>
+  );
+
+  const renderDashboard = () => (
+    <View>
+      {/* HIGHLIGHT SECTION */}
+      {activeRide && (
+          <View style={styles.highlightSection}>
+              <Card
+                  {...activeRide}
+                  variant="highlight"
+                  buttonTitle="Manage Ride"
+                  onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
+              />
+          </View>
+      )}
+
+      {/* LIST SECTION */}
+      <View style={styles.listSection}>
+          <View style={styles.sectionHeader}>
+              <Label variant="subheading" style={{ marginBottom: 4 }}>Your Booking History</Label>
+              {(fromDate || toDate) && (
+                  <Button 
+                      title="Clear Filter"
+                      variant="hyperlink"
+                      textSize={14}
+                      onPress={() => { setFromDate(null); setToDate(null); }}
+                      style={{ padding: 0 }} 
+                  />
+              )}
+          </View>
+
+          <View style={styles.filterRow}>
+            <View style={styles.column}>
+              <DateRangePicker
+                fromDate={fromDate}
+                toDate={toDate}
+                onFromChange={setFromDate}
+                onToChange={setToDate}
+              />
+            </View>
+          </View>
+
+          {carouselData.length > 0 ? (
+              <CardCarousel
+                data={carouselData}
+                actionLabel="View Booking"
+                onBookPress={(item) => handleBookingPress(item.originalData || item)}
+                flatListProps={{
+                    initialNumToRender: 2,
+                    maxToRenderPerBatch: 2,
+                    windowSize: 3,
+                    removeClippedSubviews: true,
+                }}
+              />
+          ) : (
+              <View style={styles.filterEmptyState}>
+                <Label style={styles.emptyText}>No bookings found for these dates.</Label>
+              </View>
+          )}
+      </View>
+      
+      <Button
+        title="Book a New E-Bike"
+        variant="primary"
+        onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
+        style={styles.actionButton}
+      />
+      <View style={{ height: 40 }} />
+    </View>
+  );
+
+  // --- MAIN RENDER ---
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={styles.mainContainer}>
-        
         <View style={styles.headerContainer}>
            <BrandLogo />
         </View>
 
-        <View style={{ flex: 1 }}>
-          <ScrollView 
-              showsVerticalScrollIndicator={false} 
-              contentContainerStyle={styles.scrollContent}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-          >
-              <Label variant="heading" style={styles.welcome}>
-                Welcome {user?.name ? user.name.split(' ')[0] : "Sayan"}
-              </Label>
+        {loading ? (
+             <View style={styles.centerLoading}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+             </View>
+        ) : (
+             <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+                onScroll={(e) => {
+                   if (e.nativeEvent.contentOffset.y > 30 && !hasScrolled) setHasScrolled(true);
+                }}
+                scrollEventThrottle={16}
+             >
+                  <Label variant="heading" style={styles.welcome}>
+                    Welcome {user?.name ? user.name.split(' ')[0] : "Rider"}
+                  </Label>
 
-              {/* HIGHLIGHT SECTION: Active Ride */}
-              {!loading && activeRide && (
-                  <View style={styles.highlightSection}>
-                      <Card
-                          {...activeRide}
-                          variant="highlight"
-                          buttonTitle="Manage Ride" // Changed text to reflect new dashboard nature
-                          onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
-                      />
-                  </View>
-              )}
-
-              {/* LIST SECTION: Upcoming Bookings */}
-              <View style={styles.listSection}>
-                  <View style={styles.sectionHeader}>
-                      <Label variant="subheading" style={{ marginBottom: 4 }}>
-                          Your Booked E-Bikes
-                      </Label>
-
-                      {(fromDate || toDate) && (
-                          <Button 
-                              title="Clear Filter"
-                              variant="hyperlink"
-                              textSize={14}
-                              onPress={handleClearDates}
-                              style={{ padding: 0 }} 
-                          />
-                      )}
-                  </View>
-
-                  <View style={styles.filterRow}>
-                    <View style={styles.column}>
-                      <DateRangePicker
-                        fromDate={fromDate}
-                        toDate={toDate}
-                        onFromChange={setFromDate}
-                        onToChange={setToDate}
-                      />
-                    </View>
-                  </View>
-
-                  {loading ? (
-                      <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
-                  ) : carouselData.length > 0 ? (
-                      <CardCarousel
-                        data={carouselData}
-                        actionLabel="View Booking"
-                        onBookPress={(item) => handleBookingPress(item.originalData || item)}
-                      />
-                  ) : (
-                      <View style={styles.emptyState}>
-                        <Label style={styles.emptyText}>
-                          {activeRide && !fromDate ? "No upcoming bookings." : "No bookings found for these dates."}
-                        </Label>
-                        {(fromDate || toDate) && (
-                            <Button 
-                                title="View All"
-                                variant="hyperlink"
-                                textSize={14}
-                                onPress={handleClearDates}
-                                style={{ marginTop: 10 }}
-                            />
-                        )}
-                      </View>
-                  )}
-              </View>
-              
-              <Button
-                title="Book a New E-Bike"
-                variant="primary"
-                onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
-                style={styles.actionButton}
-              />
-
-              <View style={{ height: 20 }} /> 
-          </ScrollView>
-
-          <ScrollHint visible={!hasScrolled && carouselData.length > 0} />
-        </View>
+                  {allBookings.length === 0 ? renderEmptyState() : renderDashboard()}
+             </ScrollView>
+        )}
       </View>
     </ScreenWrapper>
   );
@@ -220,14 +244,27 @@ export default function RenterBookedBikesList() {
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: Colors.white },
   headerContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 5 },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 40, flexGrow: 1 },
+  centerLoading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   welcome: { marginTop: 8, marginBottom: 20, color: Colors.black },
+  
+  // Zero State Styles
+  zeroStateContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 60 },
+  zeroStateIconCircle: { 
+      width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.surface, 
+      alignItems: 'center', justifyContent: 'center', marginBottom: 20 
+  },
+  zeroStateTitle: { marginBottom: 10, textAlign: 'center' },
+  zeroStateText: { textAlign: 'center', color: Colors.placeholderTextColor, paddingHorizontal: 40, marginBottom: 30, lineHeight: 22 },
+  zeroStateButton: { width: '80%' },
+
+  // Dashboard Styles
   highlightSection: { marginBottom: 24 },
   listSection: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   filterRow: { flexDirection: "row", gap: 12, marginTop: 10, marginBottom: 10 },
   column: { flex: 1 },
-  emptyState: { height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 12, marginTop: 10 },
+  filterEmptyState: { height: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 12 },
   emptyText: { color: Colors.placeholderTextColor, fontSize: 14 },
   actionButton: { marginTop: 10, marginBottom: 10 }
 });

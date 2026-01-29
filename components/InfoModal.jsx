@@ -1,42 +1,61 @@
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Modal, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Colors } from "../theme/colors";
-import Button from "./Button";
 import Label from "./Label";
 
-export default function InfoModal({
-  title,
+export default function InfoModal({ 
+  visible, 
+  onClose, 
+  title, 
   children,
-  onClose,
-  visible = false,
+  variant = "center", // "center" | "bottom"
+  showCloseButton = true
 }) {
+  const isBottom = variant === "bottom";
+
   return (
-    <Modal 
-      transparent 
-      visible={visible} 
-      animationType="fade" 
+    <Modal
+      animationType={isBottom ? "slide" : "fade"}
+      transparent={true}
+      visible={visible}
       onRequestClose={onClose}
     >
-      {/* Pressing the overlay also closes the modal */}
-      <Pressable style={styles.overlay} onPress={onClose}>
-        
-        {/* Pressable here stops the click from bubbling up to the overlay */}
-        <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
-          {title && (
-            <Label variant="subheading" bold style={styles.title}>
-              {title}
-            </Label>
-          )}
+      {/* 1. Outer Pressable: The "Backdrop" */}
+      {/* Tapping here fires 'onClose' because it is the bottom-most layer */}
+      <Pressable 
+        style={[
+          styles.overlay, 
+          isBottom ? styles.overlayBottom : styles.overlayCenter
+        ]}
+        onPress={onClose}
+      >
+        {/* 2. Inner Pressable: The "Container" */}
+        {/* Tapping here does NOTHING, but it 'catches' the tap so it doesn't hit the backdrop. */}
+        {/* Your buttons/icons inside this are 'above' this layer, so they will still work! */}
+        <Pressable 
+          style={[
+            styles.container, 
+            isBottom ? styles.containerBottom : styles.containerCenter
+          ]}
+          onPress={() => {}} 
+        >
+          
+          {/* Header */}
+          <View style={styles.header}>
+            <Label variant="subheading" style={styles.title}>{title}</Label>
+            
+            {showCloseButton && (
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={Colors.black} />
+              </TouchableOpacity>
+            )}
+          </View>
 
+          {/* Content */}
           <View style={styles.content}>
             {children}
           </View>
 
-          <Button 
-            title="Close" 
-            variant="primary" 
-            onPress={onClose} 
-            style={styles.closeButton}
-          />
         </Pressable>
       </Pressable>
     </Modal>
@@ -46,31 +65,61 @@ export default function InfoModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  overlayCenter: {
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.7)", // Darker overlay for better focus
+    padding: 20,
   },
+  overlayBottom: {
+    justifyContent: "flex-end", 
+  },
+  
   container: {
-    width: "85%",
     backgroundColor: Colors.white,
-    borderRadius: 20, // Match your card border radius
-    padding: 24,
+    overflow: "hidden",
+  },
+  containerCenter: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 16,
+    padding: 20,
+    // Shadow
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 10,
+    shadowRadius: 3.84,
     elevation: 5,
   },
-  title: {
-    marginBottom: 8,
-    textAlign: 'center',
-    color: Colors.black,
+  containerBottom: {
+    width: "100%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40, 
+    // Shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  content: {
-    marginVertical: 16,
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  title: {
+    flex: 1,
   },
   closeButton: {
-    marginTop: 8,
-    width: '100%',
+    padding: 4,
+    marginLeft: 8,
   },
+  content: {
+    // Content flows naturally
+  }
 });

@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, View } from "react-native";
 import Card from "./Card";
 import Label from "./Label";
 
+// Dimensions matches Card.jsx style (280 width + 12 margin)
 const CARD_WIDTH = 280;
 const CARD_MARGIN = 12;
 const TOTAL_ITEM_WIDTH = CARD_WIDTH + CARD_MARGIN;
@@ -12,25 +13,30 @@ function CardCarousel({
   title,
   onBookPress,
   actionLabel = "Book Ride",
-  testID
+  testID,
+  flatListProps // 👈 1. Accept this prop to allow parent control
 }) {
   if (!data || data.length === 0) {
     return null;
   }
 
+  // 2. Optimized renderItem
   const renderItem = useCallback(({ item }) => {
-    // ✅ No logic here. It assumes 'item' is already formatted correctly.
     return (
       <Card
-        {...item} // Spreads title, subtitle, badgeText, image, price, etc.
+        {...item} 
         variant="standard"
         buttonTitle={actionLabel}
+        // ⚠️ Optimization: Pass the ID or Item to the parent handler later 
+        // instead of creating an arrow function here if possible.
+        // For now, this is okay provided 'Card' uses a smart memo check.
         onBookPress={() => onBookPress?.(item)}
       />
     );
   }, [onBookPress, actionLabel]);
 
-  const getItemLayout = useCallback((data, index) => ({
+  // 3. Exact Layout Calculation (Crucial for performance)
+  const getItemLayout = useCallback((_, index) => ({
     length: TOTAL_ITEM_WIDTH,
     offset: TOTAL_ITEM_WIDTH * index,
     index,
@@ -43,15 +49,19 @@ function CardCarousel({
       <FlatList
         data={data}
         horizontal
-        keyExtractor={(item) => item.id}
+        // Ensure ID is a string to avoid warnings
+        keyExtractor={(item) => String(item.id)} 
         renderItem={renderItem}
         getItemLayout={getItemLayout}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.list}
-        initialNumToRender={3}
-        maxToRenderPerBatch={3}
+        
+        // 4. Spread parent optimizations first, then fallback to safe defaults
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
         windowSize={3}
         removeClippedSubviews={true} 
+        {...flatListProps} 
       />
     </View>
   );
@@ -60,6 +70,9 @@ function CardCarousel({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
+    // 5. ⚠️ FIXED HEIGHT: Helping 'removeClippedSubviews' work correctly
+    // Card height (approx 300) + Padding (10) + Title (approx 30)
+    height: 380, 
   },
   title: {
     marginBottom: 12,

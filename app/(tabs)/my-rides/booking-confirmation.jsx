@@ -25,7 +25,6 @@ export default function RenterBookingConfirmation() {
   const [insuranceAccepted, setInsuranceAccepted] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   
-  // ✅ MODAL STATES
   const [isSupplierModalVisible, setSupplierModalVisible] = useState(false);
   const [isInsuranceModalVisible, setInsuranceModalVisible] = useState(false);
 
@@ -99,10 +98,13 @@ export default function RenterBookingConfirmation() {
               storeName={bike.supplier?.name}
               isVerified={bike.isVerified}
               onSupplierPress={() => setSupplierModalVisible(true)}
+              
+              // 🚀 REMOVED: location & dateRange props.
+              // We rely on the "Details Section" below for this info.
             />
           </View>
 
-          {/* DETAILS SECTION */}
+          {/* DETAILS SECTION (Detailed Info) */}
           <View style={styles.detailsContainer}>
             <View style={styles.detailRow}>
               <Ionicons name="location-outline" size={20} color={Colors.primary} />
@@ -152,7 +154,7 @@ export default function RenterBookingConfirmation() {
                 variant="body" bold secondary
                 color={Colors.primary} 
                 style={{ textDecorationLine: 'underline' }}
-                onPress={() => setInsuranceModalVisible(true)} // 🚀 Trigger Insurance Modal
+                onPress={() => setInsuranceModalVisible(true)}
               >
                 insurance
               </Label>
@@ -174,7 +176,7 @@ export default function RenterBookingConfirmation() {
           />
         </ScrollView>
 
-        {/* ✅ MODAL 1: Supplier Profile */}
+        {/* MODAL 1: Supplier Profile */}
         <InfoModal 
           visible={isSupplierModalVisible} 
           title="Supplier Profile" 
@@ -183,7 +185,7 @@ export default function RenterBookingConfirmation() {
           <SupplierProfileView supplier={bike.supplier} />
         </InfoModal>
 
-        {/* ✅ MODAL 2: Insurance Details (Direct Inline Content) */}
+        {/* MODAL 2: Insurance Details */}
         <InfoModal 
           visible={isInsuranceModalVisible} 
           title="Insurance Policy" 
@@ -193,7 +195,7 @@ export default function RenterBookingConfirmation() {
              <Ionicons name="shield-checkmark" size={40} color={Colors.primary} style={styles.modalIcon} />
              <Label bold style={styles.modalSubTitle}>Comprehensive Protection</Label>
              <Label variant="body" style={styles.modalText}>
-                Our mandatory insurance covers you for accidental damage, third-party liability, and theft during your rental period.
+               Our mandatory insurance covers you for accidental damage, third-party liability, and theft during your rental period.
              </Label>
              <View style={styles.bulletPoint}>
                 <Ionicons name="radio-button-on" size={8} color={Colors.primary} />
@@ -204,7 +206,7 @@ export default function RenterBookingConfirmation() {
                 <Label style={styles.bulletText}>24/7 Roadside assistance included.</Label>
              </View>
              <Label variant="caption" style={styles.disclaimer}>
-                Terms and conditions apply. Full policy document sent via email.
+               Terms and conditions apply. Full policy document sent via email.
              </Label>
           </View>
         </InfoModal>

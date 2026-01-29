@@ -11,6 +11,16 @@ import ScrollHint from "../../../components/ScrollHint";
 import { bikeService } from "../../../services/bikeService";
 import { Colors } from "../../../theme/colors";
 
+// ✅ Helper for Date Formatting
+const formatDate = (dateString) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
 export default function RenterBikeDetails() {
   const router = useRouter();
   const { from, to, category, location, maxPrice } = useLocalSearchParams();
@@ -18,6 +28,14 @@ export default function RenterBikeDetails() {
   const [bikes, setBikes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false); 
+
+  // ✅ Construct Date Range String once
+  const dateRangeString = useMemo(() => {
+    if (from && to) {
+        return `${formatDate(from)} to ${formatDate(to)}`;
+    }
+    return null;
+  }, [from, to]);
 
   useEffect(() => {
     const fetchBikes = async () => {
@@ -111,10 +129,12 @@ export default function RenterBikeDetails() {
                             rating={highlightBike.rating}
                             badgeText={highlightBike.status?.toUpperCase()}
                             storeName={highlightBike.supplier?.name}
-                            
-                            // 🚀 KEY FIX: Passing isVerified to Highlight Card
                             isVerified={highlightBike.isVerified} 
                             
+                            // ✅ PASSING NEW PROPS
+                            location={highlightBike.supplier?.location}
+                            dateRange={dateRangeString}
+
                             buttonTitle="Book This E-Bike"
                             onBookPress={() => handleBookPress(highlightBike)}
                         />
@@ -147,10 +167,12 @@ export default function RenterBikeDetails() {
                             rating={item.rating}
                             badgeText={item.status?.toUpperCase()}
                             storeName={item.supplier?.name}
-                            
-                            // 🚀 KEY FIX: Passing isVerified to List Cards
                             isVerified={item.isVerified} 
                             
+                            // ✅ PASSING NEW PROPS
+                            location={item.supplier?.location}
+                            dateRange={dateRangeString}
+
                             buttonTitle="Book"
                             onBookPress={() => handleBookPress(item)}
                         />

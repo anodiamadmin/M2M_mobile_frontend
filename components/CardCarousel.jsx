@@ -1,29 +1,43 @@
-import { View, StyleSheet, FlatList } from "react-native";
+import { memo, useCallback } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
 import Card from "./Card";
 import Label from "./Label";
 
-export default function CardCarousel({
+const CARD_WIDTH = 280;
+const CARD_MARGIN = 12;
+const TOTAL_ITEM_WIDTH = CARD_WIDTH + CARD_MARGIN;
+
+function CardCarousel({
   data = [],
   title,
-  cardVariant = "default",
-  onItemPress,
+  onBookPress,
+  actionLabel = "Book Ride",
+  testID
 }) {
-  // ✅ Required for test: render nothing
   if (!data || data.length === 0) {
     return null;
   }
 
-  const renderItem = ({ item }) => (
-    <Card
-      title={item.title}
-      variant={cardVariant}
-      onPress={() => onItemPress?.(item)}
-    />
-  );
+  const renderItem = useCallback(({ item }) => {
+    // ✅ No logic here. It assumes 'item' is already formatted correctly.
+    return (
+      <Card
+        {...item} // Spreads title, subtitle, badgeText, image, price, etc.
+        variant="standard"
+        buttonTitle={actionLabel}
+        onBookPress={() => onBookPress?.(item)}
+      />
+    );
+  }, [onBookPress, actionLabel]);
+
+  const getItemLayout = useCallback((data, index) => ({
+    length: TOTAL_ITEM_WIDTH,
+    offset: TOTAL_ITEM_WIDTH * index,
+    index,
+  }), []);
 
   return (
-    <View style={styles.container}>
-      {/* Optional Section Title */}
+    <View style={styles.container} testID={testID}>
       {title && <Label style={styles.title}>{title}</Label>}
 
       <FlatList
@@ -31,8 +45,13 @@ export default function CardCarousel({
         horizontal
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        getItemLayout={getItemLayout}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.list}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={3}
+        removeClippedSubviews={true} 
       />
     </View>
   );
@@ -40,15 +59,18 @@ export default function CardCarousel({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    marginVertical: 10,
   },
   title: {
-    marginBottom: 8,
-    fontSize: 16,
+    marginBottom: 12,
+    fontSize: 18,
     fontWeight: "700",
+    marginLeft: 4, 
   },
   list: {
-    paddingVertical: 4,
-    gap: 12,
+    paddingRight: 16, 
+    paddingBottom: 10, 
   },
 });
+
+export default memo(CardCarousel);

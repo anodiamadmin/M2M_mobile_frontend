@@ -1,67 +1,88 @@
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
-import BrandLogo from "@components/BrandLogo";
-import Button from "@components/Button";
-import Label from "@components/Label";
-import ScreenWrapper from "@components/ScreenWrapper";
+import BrandLogo from "../../../components/BrandLogo";
+import Button from "../../../components/Button";
+import Label from "../../../components/Label";
+import ScreenWrapper from "../../../components/ScreenWrapper";
+import ScrollHint from "../../../components/ScrollHint"; // ✅ In case of small screens
 
-import DateRangePicker from "@components/DateRangePicker";
-import Dropdown from "@components/Dropdown";
-import LocationSelector from "@components/LocationSelector";
-import PriceRangeSlider from "@components/PriceRangeSlider";
+import DateRangePicker from "../../../components/DateRangePicker";
+import Dropdown from "../../../components/Dropdown";
+import LocationSelector from "../../../components/LocationSelector";
+import PriceRangeSlider from "../../../components/PriceRangeSlider";
 
 import { AuthContext } from "../../../context/AuthContext";
+import { BikeType } from "../../../services/mockBikeData";
 import { Colors } from "../../../theme/colors";
 
-const CATEGORY_OPTIONS = ["Road", "Mountain", "Hybrid", "Electric"];
+const CATEGORY_OPTIONS = Object.values(BikeType);
 
 export default function RenterBookingFilter() {
   const { user } = useContext(AuthContext);
   const router = useRouter();
 
-  // ---- STATE ----
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState(100);
   const [category, setCategory] = useState(null);
   const [location, setLocation] = useState(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
-  // ---- ACTIONS ----
   const handleContinue = () => {
     if (!fromDate || !toDate || !category || !location) {
-      Alert.alert(
-        "Missing Details",
-        "Please fill all fields before continuing"
-      );
+      Alert.alert("Missing Details", "Please fill all fields before continuing");
       return;
     }
 
-    router.push("/my-rides/booking-bike-details");
+    router.push({
+      pathname: "/(tabs)/my-rides/booking-bike-details",
+      params: {
+        from: fromDate.toISOString(),
+        to: toDate.toISOString(),
+        category,
+        location,
+        maxPrice: price
+      }
+    });
   };
 
-  const handleMyBookings = () => {
-    router.push("/my-rides");
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    if (offsetY > 20 && !hasScrolled) {
+      setHasScrolled(true);
+    }
   };
 
   return (
-    <ScreenWrapper>
-      <View style={styles.container}>
-        <BrandLogo />
+    // ✅ Apply edges override to fit perfectly with the Tab Bar
+    <ScreenWrapper edges={['top', 'left', 'right']}>
+      <View style={{ flex: 1 }}>
+        
+        {/* FIXED HEADER */}
+        <View style={styles.headerContainer}>
+          <BrandLogo />
+        </View>
 
-        <Label variant='heading' color= {Colors.primary}>
-          Welcome {user?.name}
-        </Label>
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={styles.scrollContent}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {/* WELCOME SECTION */}
+          <View style={styles.welcomeSection}>
+            <Label variant="heading" secondary style={styles.welcome}>
+              Welcome {user?.name ? user.name.split(' ')[0] : "Sayan"}
+            </Label>
+            <Label variant="body" secondary color={Colors.placeholderTextColor}>
+              Set your preferences to find the perfect ride.
+            </Label>
+          </View>
 
-        <Label variant='subheading' bold={false}>
-          Book an E-Bike
-        </Label>
-
-        {/* ---- DATE RANGE ---- */}
-        <View style={styles.row}>
-          <View style={styles.column} testID="start-date-picker">
-            {/* ---- DATE RANGE ---- */}
+          {/* FILTERS */}
+          <View style={styles.filterSection}>
             <DateRangePicker
               fromLabel="From"
               toLabel="To"
@@ -71,68 +92,69 @@ export default function RenterBookingFilter() {
               onToChange={setToDate}
             />
 
+            <PriceRangeSlider
+              value={price}
+              onValueChange={setPrice}
+            />
+
+            <Dropdown
+              label="Category"
+              options={CATEGORY_OPTIONS}
+              value={category}
+              onSelect={setCategory}
+            />
+
+            <LocationSelector
+              value={location}
+              onLocationSelected={setLocation}
+            />
           </View>
 
-        </View>
+          {/* ACTION BUTTONS */}
+          <View style={styles.actionButtons}>
+            <Button
+              title="Continue"
+              variant="primary"
+              onPress={handleContinue}
+            />
 
-        {/* ---- PRICE RANGE ---- */}
-        <PriceRangeSlider
-          testID="price-slider"
-          value={price}
-          onValueChange={setPrice}
-        />
+            <Button
+              title="Visit My Bookings"
+              variant="secondary"
+              onPress={() => router.push("/(tabs)/my-rides")}
+            />
+          </View>
+        </ScrollView>
 
-        {/* ---- CATEGORY ---- */}
-        <Label style={styles.section}></Label>
-        <Dropdown
-          testID="category-dropdown"
-          label="Category"
-          options={CATEGORY_OPTIONS}
-          value={category}
-          onSelect={setCategory}
-        />
-
-        {/* ---- LOCATION ---- */}
-        <Label style={styles.section}></Label>
-        <LocationSelector
-          testID="location-selector"
-          value={location}
-          onLocationSelected={setLocation}
-        />
-
-        {/* ---- ACTION BUTTONS ---- */}
-        <Button
-          testID="continue-button"
-          title="Continue"
-          variant="primary"
-          onPress={handleContinue}
-        />
-
-        <Button
-          testID="my-bookings-button"
-          title="Visit My Bookings"
-          variant="secondary"
-          onPress={handleMyBookings}
-        />
+        {/* ✅ Hint only shows if the device screen is small enough to require scrolling */}
+        <ScrollHint visible={!hasScrolled} />
       </View>
     </ScreenWrapper>
   );
 }
 
-export const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },  
-  section: {
-    marginTop: -6,
-    marginBottom: -6,
+const styles = StyleSheet.create({
+  headerContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 5,
   },
-  row: {
-    flexDirection: "row",
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  welcomeSection: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  welcome: {
+    marginBottom: 4,
+  },
+  filterSection: {
+    gap: 20,
+  },
+  actionButtons: {
+    marginTop: 30,
     gap: 12,
-    marginTop: 10
-  },
-  column: {
-    flex: 1,
-  },
+  }
 });

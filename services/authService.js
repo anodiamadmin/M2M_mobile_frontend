@@ -37,5 +37,25 @@ export const authService = {
     } finally {
       await SecureStore.deleteItemAsync('user_token');
     }
+  },
+
+  // ✅ NEW: Fetch User Profile
+  async getUserProfile() {
+    const token = await SecureStore.getItemAsync('user_token');
+    if (!token) throw new Error("No token found");
+
+    // ⚠️ IMPORTANT: Verify this endpoint with your backend. 
+    // It is commonly '/users/me' or '/auth/me'
+    const response = await apiClient.get('/users/user', {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // ✅ DATA MAPPING:
+    // If backend returns 'full_name' but UI expects 'name', we map it here.
+    if (response.data.full_name && !response.data.name) {
+        return { ...response.data, name: response.data.full_name };
+    }
+
+    return response.data;
   }
 };

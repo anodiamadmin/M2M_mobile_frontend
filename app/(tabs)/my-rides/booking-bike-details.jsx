@@ -1,113 +1,164 @@
-import React from "react";
-import { View, StyleSheet, FlatList } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 
-import ScreenWrapper from "../../../components/ScreenWrapper";
-import Label from "../../../components/Label";
+import BrandLogo from "../../../components/BrandLogo";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
+import Label from "../../../components/Label";
+import ScreenWrapper from "../../../components/ScreenWrapper";
+import ScrollHint from "../../../components/ScrollHint"; // ✅ Imported modular component
+import { bikeService } from "../../../services/bikeService";
+import { Colors } from "../../../theme/colors";
 
 export default function RenterBikeDetails() {
   const router = useRouter();
-  const { start, end, loc } = useLocalSearchParams();
+  const { from, to, category, location, maxPrice } = useLocalSearchParams();
 
-  // --- Mocked Data (driven by test expectations) ---
-  const highlightBike = {
-    id: "1",
-    title: "Sam's E-Bike",
-    price: 136,
-    isVerified: true,
-    isCheapest: true,
-  };
+  const [bikes, setBikes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [hasScrolled, setHasScrolled] = useState(false); // ✅ Added scroll state
 
-  const similarBikes = [
-    {
-      id: "2",
-      title: "Urban Rider",
-      price: 120,
-      isVerified: false,
-    },
-    {
-      id: "3",
-      title: "Cargo Plus",
-      price: 150,
-      isVerified: true,
-    },
-  ];
+  // 1. Fetch Data from Service
+  useEffect(() => {
+    const fetchBikes = async () => {
+      try {
+        const data = await bikeService.getAvailableBikes();
+        setBikes(data);
+      } catch (error) {
+        console.error("Failed to load bikes", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBikes();
+  }, []);
 
-  const handleBookNow = () => {
+  // 2. Filter & Sort Logic
+  const sortedBikes = useMemo(() => {
+    const filtered = bikes.filter(bike => {
+      if (location) {
+        const bikeLoc = bike.supplier?.location?.toLowerCase() || "";
+        if (!bikeLoc.includes(location.toLowerCase())) return false;
+      }
+      if (category && bike.type?.toLowerCase() !== category.toLowerCase()) return false;
+      if (maxPrice && bike.price > parseFloat(maxPrice)) return false;
+      return true;
+    });
+    return [...filtered].sort((a, b) => a.price - b.price);
+  }, [bikes, location, category, maxPrice]);
+
+  const highlightBike = sortedBikes.length > 0 ? sortedBikes[0] : null;
+  const similarBikes = sortedBikes.length > 1 ? sortedBikes.slice(1) : [];
+
+  const handleBookPress = (bike) => {
     router.push({
-      pathname: "/my-rides/booking-confirmation",
-      params: {
-        start,
-        end,
-        loc,
+      pathname: "/(tabs)/my-rides/booking-confirmation",
+      params: { 
+        bikeId: bike.id,
+        from, 
+        to, 
+        price: bike.price 
       },
     });
   };
 
-  const handleSimilarPress = (bike) => {
-    router.push({
-      pathname: "/my-rides/booking-confirmation",
-      params: { id: bike.id },
-    });
+  // ✅ 3. Detect Scroll in FlatList
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    if (offsetY > 30 && !hasScrolled) {
+      setHasScrolled(true);
+    }
   };
 
   return (
-    <ScreenWrapper>
+    // ✅ Apply surgical override for Tab Navigation
+    <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        {/* Header */}
-        <Label style={styles.header}>
-          Top Pick for You
-        </Label>
-        <Label style={styles.subHeader}>
-          {loc}
-        </Label>
-
-        {/* Highlight Bike Card */}
-        <View style={styles.highlightWrapper}>
-          <Card
-            testID="highlight-bike-card"
-            title={highlightBike.title}
-            price={highlightBike.price}
-            isVerified={highlightBike.isVerified}
-            variant="highlightBikeCard"
-            onPress={() => {}}
-          />
-
-          {highlightBike.isCheapest && (
-            <Label style={styles.cheapestTag}>Cheapest</Label>
-          )}
+        
+        {/* HEADER */}
+        <View style={styles.headerSpacing}>
+            <BrandLogo />
         </View>
 
-        {/* Book CTA */}
-        <Button
-          title="Book This E-Bike"
-          testID="book-now-button"
-          variant="primary"
-          onPress={handleBookNow}
-        />
+        <View style={styles.titleContainer}>
+            <Label variant="heading" style={styles.headerText}>
+                Top Picks for You
+            </Label>
+            {location && (
+                <Label variant="caption" style={styles.subHeader}>
+                    in {location}
+                </Label>
+            )}
+        </View>
 
-        {/* Similar Bikes */}
-        <Label style={styles.similarTitle}>
-          Similar E-Bikes
-        </Label>
+        {loading ? (
+             <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
+        ) : (
+            <View style={{ flex: 1 }}>
+              <FlatList
+                data={similarBikes}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+                onScroll={handleScroll} // ✅ Listen for scroll
+                scrollEventThrottle={16}
+                
+                ListHeaderComponent={
+                    highlightBike ? (
+                    <View style={styles.highlightWrapper}>
+                        <Card
+                            variant="highlight"
+                            title={highlightBike.title}
+                            type={highlightBike.type} 
+                            price={highlightBike.price}
+                            image={highlightBike.image}
+                            rating={highlightBike.rating}
+                            badgeText={highlightBike.status?.toUpperCase()}
+                            storeName={highlightBike.supplier?.name}
+                            buttonTitle="Book This E-Bike"
+                            onBookPress={() => handleBookPress(highlightBike)}
+                        />
+                        
+                        {similarBikes.length > 0 && (
+                            <Label variant="subheading" style={styles.similarTitle}>Similar E-Bikes</Label>
+                        )}
+                    </View>
+                    ) : (
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyText}>No bikes found matching your criteria.</Text>
+                            <Button 
+                                title="Adjust Filters" 
+                                variant="secondary" 
+                                onPress={() => router.back()} 
+                                style={{ marginTop: 20 }}
+                            />
+                        </View>
+                    )
+                }
 
-        <FlatList
-          testID="similar-bikes-list"
-          data={similarBikes}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Card
-              testID="similar-bike-card"
-              title={item.title}
-              price={item.price}
-              isVerified={item.isVerified}
-              variant="default"
-              onPress={() => handleSimilarPress(item)}
-            />
-          )}
-        />
+                renderItem={({ item }) => (
+                    <View style={styles.cardWrapper}>
+                        <Card
+                            variant="standard"
+                            title={item.title}
+                            type={item.type}
+                            price={item.price}
+                            image={item.image}
+                            rating={item.rating}
+                            badgeText={item.status?.toUpperCase()}
+                            storeName={item.supplier?.name}
+                            buttonTitle="Book"
+                            onBookPress={() => handleBookPress(item)}
+                        />
+                    </View>
+                )}
+              />
+
+              {/* ✅ Show Hint only if there is "Similar" content and user hasn't scrolled yet */}
+              <ScrollHint visible={!hasScrolled && similarBikes.length > 0} />
+            </View>
+        )}
       </View>
     </ScreenWrapper>
   );
@@ -115,36 +166,44 @@ export default function RenterBikeDetails() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    flex: 1,
+    paddingHorizontal: 16,
   },
-  header: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 4,
+  headerSpacing: {
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  titleContainer: {
+    marginBottom: 16,
+  },
+  headerText: {
+    color: Colors.black,
   },
   subHeader: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 16,
+    color: Colors.placeholderTextColor,
+    marginTop: 4,
+  },
+  listContent: {
+    paddingBottom: 80, // ✅ Extra padding for ScrollHint and TabBar clearance
   },
   highlightWrapper: {
-    marginBottom: 16,
-  },
-  cheapestTag: {
-    marginTop: 6,
-    alignSelf: "flex-start",
-    backgroundColor: "#EDE3FF",
-    color: "#6C2AE8",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: "600",
+    marginBottom: 24,
   },
   similarTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginTop: 24,
-    marginBottom: 8,
+    marginTop: 10,
+    marginBottom: 16,
   },
+  cardWrapper: {
+    marginBottom: 16,
+    alignItems: 'center', 
+  },
+  emptyState: {
+    marginTop: 50,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: Colors.placeholderTextColor,
+    textAlign: 'center',
+  }
 });

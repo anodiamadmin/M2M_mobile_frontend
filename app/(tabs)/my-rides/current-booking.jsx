@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, TextInput, View } from "react-native";
 
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
@@ -61,7 +61,7 @@ export default function CurrentBooking() {
   const [hasScrolled, setHasScrolled] = useState(false);
   
   // Modals
-  const [isSupplierVisible, setSupplierVisible] = useState(false);
+  const [isSupplierVisible, setSupplierModalVisible] = useState(false);
   const [isInsuranceVisible, setInsuranceVisible] = useState(false); 
   const [isCancelSheetVisible, setCancelSheetVisible] = useState(false); 
   const [isPolicyModalVisible, setPolicyModalVisible] = useState(false); 
@@ -147,8 +147,8 @@ export default function CurrentBooking() {
             { text: "OK", onPress: () => router.back() }
         ]);
     } else {
-        Alert.alert("Report Submitted", "Our support team will contact you shortly.", [
-            { text: "OK" }
+        Alert.alert("Incident Reported", "Our support team will contact you shortly.", [
+            { text: "OK", onPress: () => router.back() }
         ]);
     }
   };
@@ -187,7 +187,7 @@ export default function CurrentBooking() {
             </View>
 
             <View style={styles.cardWrapper}>
-                <Card variant="highlight" title={bike.title} subtitle={`${bike.type} E-BIKE`} price={bike.price} image={bike.image} rating={bike.rating} isVerified={bike.isVerified} storeName={bike.supplier?.name} onSupplierPress={() => setSupplierVisible(true)} badgeText="" />
+                <Card variant="highlight" title={bike.title} subtitle={`${bike.type} E-BIKE`} price={bike.price} image={bike.image} rating={bike.rating} isVerified={bike.isVerified} storeName={bike.supplier?.name} onSupplierPress={() => setSupplierModalVisible(true)} badgeText="" />
             </View>
 
             {/* Details Section */}
@@ -201,8 +201,14 @@ export default function CurrentBooking() {
                     <Label variant="body" secondary style={styles.detailText}>From <Label variant="body" bold secondary>{bookingDetails?.startStr}</Label> To <Label variant="body" bold secondary>{bookingDetails?.endStr}</Label></Label>
                 </View>
                 <View style={styles.detailRow}>
-                    <Ionicons name="person-circle-outline" size={20} color={Colors.primary} />
-                    <Button title="View Owner's Profile" variant="hyperlink" onPress={() => setSupplierVisible(true)} style={styles.hyperlinkButton} textSize={15} />
+                    <Ionicons name="business-outline" size={20} color={Colors.primary} />
+                        <Button 
+                        title={`About ${bike.supplier?.name}`}
+                        variant="hyperlink"
+                        onPress={() => setSupplierModalVisible(true)}
+                        style={styles.hyperlinkButton}
+                        textSize={16} 
+                        />
                 </View>
                 <View style={styles.detailRow}>
                     <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
@@ -255,8 +261,12 @@ export default function CurrentBooking() {
 
                 {bookingPhase === "ACTIVE_RIDE" && (
                     <View style={{ gap: 10 }}>
+                        <View style={styles.checkboxRow}>
+                            <Checkbox checked={featuresConfirmed} onPress={() => setFeaturesConfirmed(!featuresConfirmed)} size={24} />
+                            <Label variant="body" secondary style={styles.checkboxLabel}>I confirm all <Label variant="body" bold color={Colors.primary} style={{ textDecorationLine: 'underline' }} onPress={() => setFeaturesModalVisible(true)}>e-bike features</Label> are working fine.</Label>
+                        </View>
                         <Button title="Return E-Bike" variant="primary" onPress={handleReturn} />
-                        <Button title="Report Issue" variant="secondary" onPress={() => setRaiseIssueVisible(true)} />
+                        <Button title="Report an Incident" variant="secondary" onPress={() => setRaiseIssueVisible(true)} />
                     </View>
                 )}
             </View>
@@ -275,7 +285,7 @@ export default function CurrentBooking() {
       </View>
 
       {/* --- MODALS --- */}
-      <InfoModal visible={isSupplierVisible} title="Supplier Profile" onClose={() => setSupplierVisible(false)}><SupplierProfileView supplier={bike.supplier} /></InfoModal>
+      <InfoModal visible={isSupplierVisible} title="Supplier Profile" onClose={() => setSupplierModalVisible(false)}><SupplierProfileView supplier={bike.supplier} /></InfoModal>
       
       <InfoModal visible={isInsuranceVisible} title="Insurance" showCloseButton={false} onClose={() => setInsuranceVisible(false)}>
           <View style={{ minHeight: 400, justifyContent: 'space-between' }}>
@@ -318,19 +328,52 @@ export default function CurrentBooking() {
           </View>
       </InfoModal>
 
-      <InfoModal visible={isRaiseIssueVisible} title="Raise Issue" variant="bottom" showCloseButton={false} onClose={() => setRaiseIssueVisible(false)}>
+      {/* ✅ RAISE ISSUE / REPORT INCIDENT MODAL (Dynamic Title) */}
+      <InfoModal 
+        visible={isRaiseIssueVisible} 
+        // ✅ Dynamic Title based on state
+        title={bookingPhase === "ACTIVE_RIDE" ? "Report Incident" : "Raise Issue"} 
+        variant="bottom" 
+        showCloseButton={false} 
+        onClose={() => setRaiseIssueVisible(false)}
+      >
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
             <View style={{ gap: 16 }}>
                 <View style={{ flexDirection: 'row', height: 50, marginBottom: 8 }}>
-                    <ImageUploader label="Take Photo of Issue" activeLabel="Photo Uploaded" icon="camera" imageUri={issueImage} onImageSelected={(uri) => setIssueImage(uri)} />
+                    <ImageUploader label={bookingPhase === "ACTIVE_RIDE" ? "Take Photo of Incident" : "Take Photo of Issue"} activeLabel="Photo Uploaded" icon="camera" imageUri={issueImage} onImageSelected={(uri) => setIssueImage(uri)} />
                 </View>
                 <View>
-                    <Label style={{ marginBottom: 8, color: Colors.black }}>Describe the issue</Label>
+                    <Label secondary style={{ marginBottom: 8, color: Colors.black }}> {bookingPhase === "ACTIVE_RIDE" ? "Describe the incident" : "Describe the issue"} </Label>
                     <TextInput style={styles.issueInput} multiline placeholder="Type here..." value={issueDescription} onChangeText={setIssueDescription} />
                 </View>
-                <View style={{ gap: 12, marginTop: 10 }}>
-                    <Button title={bookingPhase === "READY_FOR_PICKUP" ? "Raise Issue + Cancel Booking" : "Submit Report"} variant="secondary" onPress={handleSubmitIssue} />
-                    <Button title="Ignore Issue, Go Back" variant="primary" onPress={() => setRaiseIssueVisible(false)} />
+                <View style={{ gap: 10, marginTop: 10 }}>
+                    <Button 
+                        // ✅ Dynamic Button Text
+                        title={bookingPhase === "READY_FOR_PICKUP" ? "Raise Issue + Cancel Booking" : "Submit Report"} 
+                        variant={bookingPhase === "READY_FOR_PICKUP" ? "secondary" : "primary"} 
+                        onPress={handleSubmitIssue} 
+                    />
+                    <Button title={bookingPhase === "READY_FOR_PICKUP" ? "Ignore Issue, Go Back" : "Dial 000"}
+                        variant={bookingPhase === "READY_FOR_PICKUP" ? "primary" : "secondary"} 
+                        onPress={() => {
+                        if (bookingPhase === "READY_FOR_PICKUP") {
+                            setRaiseIssueVisible(false);
+                        } else {
+                            // ✅ Open Phone Dialer
+                            Linking.openURL("tel:000"); 
+                        }
+                        }} 
+                    />
+                    {bookingPhase === "ACTIVE_RIDE" && (
+                        <Button 
+                            title="Make an Insurance Claim"
+                            variant="secondary"
+                            onPress={() => {
+                                setRaiseIssueVisible(false);
+                                Alert.alert("Insurance Claim", "Redirecting to claims portal...");
+                            }} 
+                        />
+                    )}
                 </View>
             </View>
         </KeyboardAvoidingView>

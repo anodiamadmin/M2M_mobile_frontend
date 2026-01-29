@@ -22,7 +22,10 @@ import { isAtLeast16, isValidEmail } from "../../utils/validators";
 
 export default function SignUp() {
   const router = useRouter();
-  const { setAuthStatus } = useContext(AuthContext);
+  
+  // ✅ 1. Destructure 'setUser' from Context
+  const { setAuthStatus, setUser } = useContext(AuthContext);
+  
   const { resolveIntent } = useIntent(); 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,12 +46,10 @@ export default function SignUp() {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
-
     if (!isAtLeast16(dob)) {
       Alert.alert("Age Restriction", "You must be at least 16 years old.");
       return;
     }
-
     if (!profileImage || !idImage) {
       Alert.alert("Photos Required", "You must take both a Selfie and ID.");
       return;
@@ -62,6 +63,7 @@ export default function SignUp() {
     setVerifying(true); 
 
     try {
+      // Simulate ID Verification delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       setVerifying(false); 
 
@@ -84,8 +86,18 @@ export default function SignUp() {
     try {
       const dobString = dob.toISOString().split('T')[0];
       const response = await authService.register(name, email, password, dobString);
+      
       if (response.access_token) {
         await SecureStore.setItemAsync('user_token', response.access_token);
+
+        // ✅ 2. Fetch & Set User Profile Immediately
+        try {
+            const userProfile = await authService.getUserProfile();
+            setUser(userProfile); // Update global state
+        } catch (profileError) {
+            console.error("Profile fetch failed after signup:", profileError);
+        }
+
         setAuthStatus(AuthStatus.AUTHENTICATED);
         resolveIntent();
       }

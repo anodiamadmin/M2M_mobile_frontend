@@ -16,7 +16,10 @@ import { authService } from "../../services/authService";
 
 export default function SignIn() {
   const router = useRouter();
-  const { setAuthStatus } = useContext(AuthContext);
+  
+  // ✅ 1. Get 'setUser' from context
+  const { setAuthStatus, setUser } = useContext(AuthContext);
+  
   const { resolveIntent } = useIntent();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,10 +32,23 @@ export default function SignIn() {
     }
     setLoading(true);
     try {
+      // 1. Perform Login
       const response = await authService.login(email, password);
       
       if (response.access_token) {
+        // (Redundant but safe: ensure token is saved before profile fetch)
         await SecureStore.setItemAsync('user_token', response.access_token);
+        
+        // ✅ 2. Fetch User Profile immediately using the new token
+        try {
+          const userProfile = await authService.getUserProfile();
+          setUser(userProfile); // Update Context State
+        } catch (profileError) {
+          console.error("Profile fetch failed:", profileError);
+          // We don't block login here, but user data might be empty until reload
+        }
+
+        // 3. Update Auth Status & Redirect
         setAuthStatus(AuthStatus.AUTHENTICATED);
         resolveIntent();
       }

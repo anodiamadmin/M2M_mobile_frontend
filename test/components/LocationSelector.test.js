@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import LocationSelector from '../../components/LocationSelector';
 
 // --- MOCKS ---
+
 jest.mock('expo-location', () => ({
   requestForegroundPermissionsAsync: jest.fn(),
   getCurrentPositionAsync: jest.fn(),
@@ -13,64 +14,98 @@ jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
   return ({ children, ...props }) => <Text {...props}>{children}</Text>;
 });
+
 jest.mock('@expo/vector-icons', () => ({
-  Ionicons: () => 'Icon',
+  Ionicons: () => null,
 }));
 
 describe('LocationSelector Component', () => {
-  
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders placeholder text when no value is selected', () => {
-    const { getByText } = render(<LocationSelector />);
-    expect(getByText('Select Pickup Location')).toBeTruthy();
-  });
-
-  it('renders the selected value when provided', () => {
-    const { getByText } = render(<LocationSelector value="Sydney CBD" />);
-    expect(getByText('Sydney CBD')).toBeTruthy();
-  });
-
-  it('requests permission and fetches location when clicked', async () => {
-    // 1. Setup Success Mocks
-    Location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
-    Location.getCurrentPositionAsync.mockResolvedValue({
-      coords: { latitude: -33.86, longitude: 151.20 }
-    });
-    Location.reverseGeocodeAsync.mockResolvedValue([{ city: 'Sydney', name: 'CBD' }]);
-
-    const mockOnSelect = jest.fn();
-    const { getByTestId } = render(
-      <LocationSelector onLocationSelected={mockOnSelect} testID="loc-selector" />
+  it('1. renders placeholder text when no value is selected', () => {
+    const { getByPlaceholderText } = render(
+      <LocationSelector testID="loc-selector" />
     );
 
-    // 2. Trigger Press
-    fireEvent.press(getByTestId('loc-selector'));
+    expect(
+      getByPlaceholderText('Enter or Select Location')
+    ).toBeTruthy();
+  });
 
-    // 3. Verify Logic
+  it('2. renders the selected value when provided', () => {
+    const { getByDisplayValue } = render(
+      <LocationSelector
+        testID="loc-selector"
+        value="Sydney CBD"
+      />
+    );
+
+    expect(getByDisplayValue('Sydney CBD')).toBeTruthy();
+  });
+
+  it('3. requests permission and fetches location when GPS button is pressed', async () => {
+    // Arrange
+    Location.requestForegroundPermissionsAsync.mockResolvedValue({
+      status: 'granted',
+    });
+
+    Location.getCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: -33.86, longitude: 151.2 },
+    });
+
+    Location.reverseGeocodeAsync.mockResolvedValue([
+      {
+        name: 'CBD',
+        street: 'George St',
+        city: 'Sydney',
+      },
+    ]);
+
+    const mockOnSelect = jest.fn();
+
+    const { getByTestId } = render(
+      <LocationSelector
+        testID="loc-selector"
+        onLocationSelected={mockOnSelect}
+      />
+    );
+
+    // Act
+    fireEvent.press(getByTestId('loc-selector-gps-button'));
+
+    // Assert
     await waitFor(() => {
       expect(Location.requestForegroundPermissionsAsync).toHaveBeenCalled();
       expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
-      // Expect it to format the address and call parent
-      expect(mockOnSelect).toHaveBeenCalledWith(expect.stringContaining('Sydney'));
+      expect(Location.reverseGeocodeAsync).toHaveBeenCalled();
+
+      expect(mockOnSelect).toHaveBeenCalledWith(
+        expect.stringContaining('Sydney')
+      );
     });
   });
 
-  it('handles permission denial gracefully', async () => {
-    Location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+  it('4. handles permission denial gracefully', async () => {
+    Location.requestForegroundPermissionsAsync.mockResolvedValue({
+      status: 'denied',
+    });
+
     const mockOnSelect = jest.fn();
 
     const { getByTestId } = render(
-        <LocationSelector onLocationSelected={mockOnSelect} testID="loc-selector" />
+      <LocationSelector
+        testID="loc-selector"
+        onLocationSelected={mockOnSelect}
+      />
     );
 
-    fireEvent.press(getByTestId('loc-selector'));
+    fireEvent.press(getByTestId('loc-selector-gps-button'));
 
     await waitFor(() => {
       expect(Location.getCurrentPositionAsync).not.toHaveBeenCalled();
-      // Should likely alert user, but for component test, ensuring it didn't fetch is key
+      expect(mockOnSelect).not.toHaveBeenCalled();
     });
   });
 });

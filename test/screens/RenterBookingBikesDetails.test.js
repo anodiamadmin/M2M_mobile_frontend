@@ -1,74 +1,122 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import React from 'react';
 import RenterBikeDetails from '../../app/(tabs)/my-rides/booking-bike-details';
 
-// ---------- MOCKS ----------
+// ---------------- MOCK DATA ----------------
 
+const MOCK_BIKES = [
+  {
+    id: '1',
+    title: "Sam's E-Bike",
+    type: 'Electric',
+    price: 100,
+    rating: 4.8,
+    status: 'Available',
+    supplier: { name: 'Urban Cycles', location: 'Sydney CBD' },
+  },
+  {
+    id: '2',
+    title: 'Cargo Plus',
+    type: 'Electric',
+    price: 140,
+    rating: 4.6,
+    status: 'Available',
+    supplier: { name: 'City Bikes', location: 'Sydney CBD' },
+  },
+];
+
+// ---------------- MOCKS ----------------
+
+// Layout
 jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
+jest.mock('../../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/ScrollHint', () => () => null);
 
+// Label
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
-  return ({ children, ...props }) => <Text {...props}>{children}</Text>;
-});
-
-// Navigation
-const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush }),
-  useLocalSearchParams: () => ({
-    start: '2026-02-01',
-    end: '2026-02-07',
-    loc: 'Sydney CBD',
-  }),
-}));
-
-// Button
-jest.mock('../../components/Button', () => {
-  const { TouchableOpacity, Text } = require('react-native');
-  return ({ title, onPress, variant, testID }) => (
-    <TouchableOpacity
-      testID={testID}
-      onPress={onPress}
-      accessibilityLabel={variant}
-    >
-      <Text>{title}</Text>
-    </TouchableOpacity>
-  );
+  return ({ children }) => <Text>{children}</Text>;
 });
 
 // Card
 jest.mock('../../components/Card', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
-  return ({ title, variant, price, isVerified, testID, onPress }) => (
-    <TouchableOpacity
-      testID={testID}
-      onPress={onPress}
-      accessibilityLabel={variant}
-    >
-      <View>
-        <Text>{title}</Text>
-        <Text>${price}/week</Text>
-        {isVerified && <Text testID="verified-badge">Verified</Text>}
-        <Text>Variant: {variant}</Text>
-      </View>
+  return ({ title, buttonTitle, onBookPress, variant }) => (
+    <View>
+      <Text>{title}</Text>
+      {buttonTitle && (
+        <TouchableOpacity onPress={onBookPress}>
+          <Text>{buttonTitle}</Text>
+        </TouchableOpacity>
+      )}
+      <Text>Variant: {variant}</Text>
+    </View>
+  );
+});
+
+// Button
+jest.mock('../../components/Button', () => {
+  const { TouchableOpacity, Text } = require('react-native');
+  return ({ title, onPress }) => (
+    <TouchableOpacity onPress={onPress}>
+      <Text>{title}</Text>
     </TouchableOpacity>
   );
 });
 
-// FlatList
+// FlatList (default export)
 jest.mock('react-native/Libraries/Lists/FlatList', () => {
+  const React = require('react');
   const { View } = require('react-native');
-  return ({ testID, data, renderItem }) => (
-    <View testID={testID}>
+
+  const MockFlatList = ({ data, renderItem, ListHeaderComponent }) => (
+    <View>
+      {ListHeaderComponent}
       {data.map((item, index) => (
-        <View key={item.id || index}>
+        <View key={item.id ?? index}>
           {renderItem({ item, index })}
         </View>
       ))}
     </View>
   );
+
+  return {
+    __esModule: true,
+    default: MockFlatList,
+  };
 });
 
-// ---------- TEST SUITE ----------
+// Icons
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: () => null,
+}));
+
+// bikeService
+jest.mock('../../services/bikeService', () => ({
+  bikeService: {
+    getAvailableBikes: jest.fn(() => Promise.resolve(MOCK_BIKES)),
+  },
+}));
+
+// Navigation
+const mockPush = jest.fn();
+const mockBack = jest.fn();
+
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    back: mockBack,
+  }),
+  useLocalSearchParams: () => ({
+    from: '2026-02-01',
+    to: '2026-02-07',
+    category: 'Electric',
+    location: 'Sydney CBD',
+    maxPrice: '200',
+  }),
+}));
+
+// ---------------- TEST SUITE ----------------
 
 describe('RenterBikeDetails Screen', () => {
   beforeEach(() => {
@@ -77,61 +125,70 @@ describe('RenterBikeDetails Screen', () => {
 
   // ---------- RENDERING ----------
 
-  it('1. Renders header and location context', () => {
+  it('1. Renders header and location context', async () => {
     const { getByText } = render(<RenterBikeDetails />);
-    expect(getByText('Top Pick for You')).toBeTruthy();
-    expect(getByText('Sydney CBD')).toBeTruthy();
+
+    await waitFor(() => {
+      expect(getByText('Top Picks for You')).toBeTruthy();
+      expect(getByText('in Sydney CBD')).toBeTruthy();
+    });
   });
 
-  it('2. Renders highlight bike card with correct variant', () => {
-    const { getByText, getByTestId } = render(<RenterBikeDetails />);
-    expect(getByTestId('highlight-bike-card')).toBeTruthy();
-    expect(getByText('Variant: highlightBikeCard')).toBeTruthy();
-  });
-
-  it('3. Shows "Cheapest" label when bike is cheapest', () => {
+  it('2. Renders highlight bike (cheapest)', async () => {
     const { getByText } = render(<RenterBikeDetails />);
-    expect(getByText('Cheapest')).toBeTruthy();
+
+    await waitFor(() => {
+      expect(getByText("Sam's E-Bike")).toBeTruthy();
+      expect(getByText('Book This E-Bike')).toBeTruthy();
+      expect(getByText('Variant: highlight')).toBeTruthy();
+    });
   });
 
-  it('4. Renders Book button with primary variant', () => {
-    const { getByTestId } = render(<RenterBikeDetails />);
-    const btn = getByTestId('book-now-button');
-    expect(btn).toBeTruthy();
-    expect(btn.props.accessibilityLabel).toBe('primary');
-  });
+  it('3. Renders similar bikes list', async () => {
+    const { getByText } = render(<RenterBikeDetails />);
 
-  it('5. Renders Similar Bikes list', () => {
-    const { getByText, getByTestId } = render(<RenterBikeDetails />);
-    expect(getByText('Similar E-Bikes')).toBeTruthy();
-    expect(getByTestId('similar-bikes-list')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText('Similar E-Bikes')).toBeTruthy();
+      expect(getByText('Cargo Plus')).toBeTruthy();
+      expect(getByText('Book')).toBeTruthy();
+    });
   });
 
   // ---------- NAVIGATION ----------
 
-  it('6. Navigates to confirmation screen on Book button press', () => {
-    const { getByTestId } = render(<RenterBikeDetails />);
-    fireEvent.press(getByTestId('book-now-button'));
+  it('4. Navigates to confirmation screen when booking highlight bike', async () => {
+    const { getByText } = render(<RenterBikeDetails />);
+
+    await waitFor(() => {
+      fireEvent.press(getByText('Book This E-Bike'));
+    });
 
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: '/my-rides/booking-confirmation',
+      pathname: '/(tabs)/my-rides/booking-confirmation',
       params: {
-        start: '2026-02-01',
-        end: '2026-02-07',
-        loc: 'Sydney CBD',
+        bikeId: '1',
+        from: '2026-02-01',
+        to: '2026-02-07',
+        price: 100,
       },
     });
   });
 
-  it('7. Navigates to confirmation screen when similar bike is pressed', () => {
-    const { getAllByTestId } = render(<RenterBikeDetails />);
+  it('5. Navigates to confirmation screen when booking similar bike', async () => {
+    const { getAllByText } = render(<RenterBikeDetails />);
 
-    const cards = getAllByTestId('similar-bike-card');
-    fireEvent.press(cards[0]);
+    await waitFor(() => {
+      fireEvent.press(getAllByText('Book')[0]);
+    });
 
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: '/my-rides/booking-confirmation',
-      params: { id: '2' },
+      pathname: '/(tabs)/my-rides/booking-confirmation',
+      params: {
+        bikeId: '2',
+        from: '2026-02-01',
+        to: '2026-02-07',
+        price: 140,
+      },
     });
   });
 });

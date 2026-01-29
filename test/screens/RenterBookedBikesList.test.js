@@ -1,68 +1,114 @@
-import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import RenterBookedBikesList from '../../app/(tabs)/my-rides/index';
 import { AuthContext } from '../../context/AuthContext';
 
-// ---------- MOCKS ----------
+// ---------------- MOCK DATA ----------------
 
-// 1. Layout / UI
+const MOCK_BOOKINGS = [
+  {
+    id: '1',
+    title: "Sam's E-Bike",
+    price: 120,
+    status: 'Active',
+    startDate: '2026-02-01',
+    endDate: '2026-02-07',
+    isVerified: true,
+  },
+  {
+    id: '2',
+    title: 'Bruna A1 Cargo',
+    price: 140,
+    status: 'Upcoming',
+    startDate: '2026-03-01',
+    endDate: '2026-03-05',
+    isVerified: false,
+  },
+];
+
+// ---------------- MOCKS ----------------
+
+// Layout
 jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
 jest.mock('../../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/ScrollHint', () => () => null);
 
+// Label
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
-  return ({ children, ...props }) => <Text {...props}>{children}</Text>;
+  return ({ children }) => <Text>{children}</Text>;
 });
 
-// 2. Mock DateRangePicker
-jest.mock('@components/DateRangePicker', () => {
+// DateRangePicker
+jest.mock('../../components/DateRangePicker', () => {
   const { View, Text } = require('react-native');
-  return ({ fromLabel, toLabel }) => (
+  return () => (
     <View>
-      <Text>{fromLabel}</Text>
-      <Text>{toLabel}</Text>
+      <Text>DateRangePicker</Text>
     </View>
   );
 });
 
-// 3. Mock CardCarousel
-jest.mock('../../components/CardCarousel', () => {
-  const { View, Text } = require('react-native');
-  return ({ data, title, testID, onItemPress }) => (
-    <View testID={testID}>
+// Card
+jest.mock('../../components/Card', () => {
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return ({ title, buttonTitle, onBookPress }) => (
+    <View>
       <Text>{title}</Text>
+      {buttonTitle && (
+        <TouchableOpacity onPress={onBookPress}>
+          <Text>{buttonTitle}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+});
+
+// CardCarousel
+jest.mock('../../components/CardCarousel', () => {
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return ({ data, actionLabel, onBookPress }) => (
+    <View>
       {data.map(item => (
-        <Text key={item.id} onPress={() => onItemPress(item)}>
-          {item.title}
-        </Text>
+        <TouchableOpacity
+          key={item.id}
+          onPress={() => onBookPress(item)}
+        >
+          <Text>{item.title}</Text>
+          <Text>{actionLabel}</Text>
+        </TouchableOpacity>
       ))}
     </View>
   );
 });
 
-// 4. Mock Button
+// Button
 jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
-  return ({ title, onPress, testID }) => (
-    <TouchableOpacity testID={testID} onPress={onPress}>
+  return ({ title, onPress }) => (
+    <TouchableOpacity onPress={onPress}>
       <Text>{title}</Text>
     </TouchableOpacity>
   );
 });
 
-// 5. Mock Navigation
-const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
+// bikeService
+jest.mock('../../services/bikeService', () => ({
+  bikeService: {
+    getMyBookings: jest.fn(() => Promise.resolve(MOCK_BOOKINGS)),
+  },
 }));
 
-// ---------- TEST SUITE ----------
+// Navigation
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+// ---------------- TEST SUITE ----------------
 
 describe('RenterBookedBikesList Screen', () => {
-
-  const renderWithAuth = (user = { name: 'John' }) =>
+  const renderWithAuth = (user = { name: 'John Doe' }) =>
     render(
       <AuthContext.Provider value={{ user }}>
         <RenterBookedBikesList />
@@ -73,51 +119,58 @@ describe('RenterBookedBikesList Screen', () => {
     jest.clearAllMocks();
   });
 
-  // ----- RENDER TESTS -----
+  // ---------- RENDERING ----------
 
-  it('1. Renders welcome message and heading', () => {
+  it('1. Renders welcome message with first name', async () => {
     const { getByText } = renderWithAuth();
-    expect(getByText('Welcome John')).toBeTruthy();
-    expect(getByText('Your Bookings')).toBeTruthy();
+
+    await waitFor(() => {
+      expect(getByText('Welcome John')).toBeTruthy();
+    });
   });
 
-  it('2. Renders DateRangePicker with From and To labels', () => {
-    const { getByText, getByTestId } = renderWithAuth();
-    expect(getByTestId('start-date-picker')).toBeTruthy();
-    expect(getByText('From')).toBeTruthy();
-    expect(getByText('To')).toBeTruthy();
+  it('2. Renders highlight booking and carousel bookings', async () => {
+    const { getByText } = renderWithAuth();
+
+    await waitFor(() => {
+      expect(getByText("Sam's E-Bike")).toBeTruthy(); // highlight
+      expect(getByText('Bruna A1 Cargo')).toBeTruthy(); // carousel
+    });
   });
 
-  it('3. Renders CardCarousel with booking data', () => {
-    const { getByTestId, getByText } = renderWithAuth();
-    expect(getByTestId('bookings-carousel')).toBeTruthy();
-    expect(getByText("Sam's E-Bike")).toBeTruthy();
-    expect(getByText('Bruna A1 Cargo')).toBeTruthy();
+  it('3. Renders "Book a New E-Bike" CTA', async () => {
+    const { getByText } = renderWithAuth();
+
+    await waitFor(() => {
+      expect(getByText('Book a New E-Bike')).toBeTruthy();
+    });
   });
 
-  it('4. Renders "Book a New E-Bike" button', () => {
-    const { getByTestId } = renderWithAuth();
-    expect(getByTestId('book-new-bike-button')).toBeTruthy();
-  });
+  // ---------- INTERACTIONS ----------
 
-  // ----- INTERACTION TESTS -----
+  it('4. Navigates to booking filter when CTA is pressed', async () => {
+    const { getByText } = renderWithAuth();
 
-  it('5. Navigates to booking filter screen on CTA press', () => {
-    const { getByTestId } = renderWithAuth();
-    fireEvent.press(getByTestId('book-new-bike-button'));
+    await waitFor(() => {
+      fireEvent.press(getByText('Book a New E-Bike'));
+    });
 
     expect(mockPush).toHaveBeenCalledWith(
-      expect.stringContaining('/my-rides/booking-filter')
+      '/(tabs)/my-rides/booking-filter'
     );
   });
 
-  it('6. Navigates to booking bike details on card press', () => {
+  it('5. Navigates to booked ride details when booking is pressed', async () => {
     const { getByText } = renderWithAuth();
-    fireEvent.press(getByText("Sam's E-Bike"));
 
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: '/my-rides/booking-bike-details',
-      params: { id: '1' },
+    await waitFor(() => {
+      fireEvent.press(getByText('View Booking'));
     });
+
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/(tabs)/my-rides/booked-ride-details',
+      })
+    );
   });
 });

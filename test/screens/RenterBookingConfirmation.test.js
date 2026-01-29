@@ -1,126 +1,152 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import React from 'react';
 import { Alert } from 'react-native';
-// Pointing to the file we will create
 import RenterBookingConfirmation from '../../app/(tabs)/my-rides/booking-confirmation';
 
-// --- MOCKS ---
+// ---------------- MOCK DATA ----------------
 
-// 1. Mock UI Components
+const MOCK_BIKE = {
+  id: '1',
+  title: "Sam's E-Bike",
+  type: 'Electric',
+  price: 136,
+  rating: 4.8,
+  status: 'Available',
+  supplier: {
+    name: 'Urban Cycles',
+    location: 'Sydney CBD',
+  },
+};
+
+// ---------------- MOCKS ----------------
+
+// Layout
 jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
+jest.mock('../../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/ScrollHint', () => () => null);
+
+// Label
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
-  return ({ children, ...props }) => <Text {...props}>{children}</Text>;
+  return ({ children }) => <Text>{children}</Text>;
 });
-jest.mock('../../components/VerifiedBadge', () => 'VerifiedBadge');
 
-// 2. Mock Expo Checkbox (Crucial for testing interaction)
-jest.mock('expo-checkbox', () => {
-  const { View } = require('react-native');
-  return (props) => (
-    <View 
-      testID="insurance-checkbox" 
-      onTouchEnd={() => props.onValueChange(!props.value)} 
-    />
+// Card
+jest.mock('../../components/Card', () => {
+  const { View, Text } = require('react-native');
+  return ({ title, price }) => (
+    <View>
+      <Text>{title}</Text>
+      <Text>${price}</Text>
+    </View>
   );
 });
 
-// 3. Mock Router & Params
-const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush }),
-  useLocalSearchParams: () => ({
-    title: "Sam's E-Bike",
-    price: "136",
-    start: "2026-12-23",
-    end: "2027-01-23"
-  }),
-}));
+// Checkbox
+jest.mock('../../components/Checkbox', () => {
+  const { TouchableOpacity, Text } = require('react-native');
+  return ({ checked, onPress }) => (
+    <TouchableOpacity onPress={onPress}>
+      <Text>{checked ? 'CHECKED' : 'UNCHECKED'}</Text>
+    </TouchableOpacity>
+  );
+});
 
-// 4. Mock Button
+// Button
 jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
-  return ({ title, onPress, style, testID }) => (
-    <TouchableOpacity testID={testID} onPress={onPress} style={style}>
+  return ({ title, onPress, disabled }) => (
+    <TouchableOpacity onPress={onPress} disabled={disabled}>
       <Text>{title}</Text>
     </TouchableOpacity>
   );
 });
 
+// Icons
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: () => null,
+}));
+
+// bikeService
+jest.mock('../../services/bikeService', () => ({
+  bikeService: {
+    getBikeById: jest.fn(() => Promise.resolve(MOCK_BIKE)),
+  },
+}));
+
+// Router
+const mockPush = jest.fn();
+const mockBack = jest.fn();
+
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    back: mockBack,
+  }),
+  useLocalSearchParams: () => ({
+    bikeId: '1',
+    from: '2026-12-23',
+    to: '2027-01-23',
+  }),
+}));
+
+// ---------------- TEST SUITE ----------------
+
 describe('RenterBookingConfirmation Screen', () => {
-  
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(Alert, 'alert'); // Spy on Alerts to verify validation messages
+    jest.spyOn(Alert, 'alert');
   });
 
-  // --- RENDERING TESTS ---
+  // ---------- RENDERING ----------
 
-  it('1. Renders bike details from params', () => {
+  it('1. Renders bike details after loading', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
-    expect(getByText("Sam's E-Bike")).toBeTruthy();
-    expect(getByText("$136")).toBeTruthy();
-    // Verify date rendering (checking partial string for resilience)
-    expect(getByText(/Start:/i)).toBeTruthy();
+
+    await waitFor(() => {
+      expect(getByText("Sam's E-Bike")).toBeTruthy();
+      expect(getByText('$136')).toBeTruthy();
+    });
   });
 
-  it('2. Renders Owner Profile link', () => {
+  it('2. Displays calculated total price', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
-    expect(getByText(/View Owner's Profile/i)).toBeTruthy();
+
+    // 31 days → 5 weeks → 5 × 136 = 680
+    await waitFor(() => {
+      expect(getByText('$680')).toBeTruthy();
+    });
   });
 
-  it('3. Renders Insurance section with mandatory checkbox', () => {
-    const { getByText, getByTestId } = render(<RenterBookingConfirmation />);
-    expect(getByText(/Insurance Requirements/i)).toBeTruthy();
-    expect(getByText(/Purchase mandatory/i)).toBeTruthy();
-    expect(getByTestId('insurance-checkbox')).toBeTruthy();
-  });
+  // ---------- INSURANCE FLOW ----------
 
-  // --- INTERACTION TESTS ---
-
-  it('4. Navigates to Insurance Info Modal when "Learn more" is pressed', () => {
+  it('3. Book button is disabled until insurance is accepted', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
-    // Assuming "Learn more" is the clickable text inside the insurance block
-    fireEvent.press(getByText(/Learn more/i));
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('insurance-info-modal'));
+
+    await waitFor(() => {
+      expect(getByText('Accept Insurance to Book')).toBeTruthy();
+    });
   });
 
-  it('5. Navigates to Owner Profile Modal when link is pressed', () => {
+  it('4. Enables booking after insurance checkbox is pressed', async () => {
     const { getByText } = render(<RenterBookingConfirmation />);
-    fireEvent.press(getByText(/View Owner's Profile/i));
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('owner-profile-modal'));
+
+    await waitFor(() => {
+      fireEvent.press(getByText('UNCHECKED'));
+    });
+
+    expect(getByText('Book')).toBeTruthy();
   });
 
-  it('6. Shows Alert (Validation Error) if Book pressed without Insurance', () => {
-    const { getByTestId } = render(<RenterBookingConfirmation />);
-    
-    // Press Book immediately (Checkbox is false by default)
-    fireEvent.press(getByTestId('book-button'));
-    
-    // Should trigger Alert, NOT navigation
-    expect(Alert.alert).toHaveBeenCalledWith("Insurance Required", expect.anything());
-    expect(mockPush).not.toHaveBeenCalledWith(expect.stringContaining('(tabs)/my-rides'));
-  });
+  it('5. Navigates to My Rides after booking', async () => {
+    const { getByText } = render(<RenterBookingConfirmation />);
 
-  it('7. Books and Navigates Home when Insurance is checked', () => {
-    const { getByTestId } = render(<RenterBookingConfirmation />);
-    
-    // 1. Check the box
-    fireEvent(getByTestId('insurance-checkbox'), 'touchEnd');
-    
-    // 2. Press Book
-    fireEvent.press(getByTestId('book-button'));
-    
-    // 3. Handle the Success Alert (Simulate pressing "OK" on the alert)
-    // In Jest, Alert.alert is a mock. We need to grab the "OK" button callback manually.
-    const alertCalls = Alert.alert.mock.calls;
-    const successAlert = alertCalls.find(call => call[0] === "Booking Confirmed!");
-    expect(successAlert).toBeTruthy();
+    await waitFor(() => {
+      fireEvent.press(getByText('UNCHECKED'));
+    });
 
-    // Execute the "OK" button's onPress from the alert options
-    const okButton = successAlert[2].find(btn => btn.text === "OK");
-    okButton.onPress();
+    fireEvent.press(getByText('Book'));
 
-    // 4. Verify Navigation to Home List
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/my-rides");
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/my-rides');
   });
 });

@@ -1,98 +1,120 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import Card from '../../components/Card';
 
-// --- MOCKS ---
+// ---------------- MOCKS ----------------
+
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
   return ({ children, ...props }) => <Text {...props}>{children}</Text>;
 });
 
-// Mock VerifiedBadge to isolate this unit test
-jest.mock('../../components/VerifiedBadge', () => 'VerifiedBadge');
+jest.mock('../../components/Button', () => {
+  const { TouchableOpacity, Text } = require('react-native');
+  return ({ title, onPress }) => (
+    <TouchableOpacity onPress={onPress}>
+      <Text>{title}</Text>
+    </TouchableOpacity>
+  );
+});
 
 jest.mock('@expo/vector-icons', () => ({
-  Ionicons: () => 'Icon',
+  Ionicons: () => null,
 }));
 
-// Comprehensive Mock Data covering both "Listing" and "Booking" scenarios
-const MOCK_CARD_DATA = {
-  id: '1',
+// ---------------- TEST DATA ----------------
+
+const BASE_PROPS = {
   title: 'Tesla E-Bike',
-  subtitle: '$50/week',        // Previously 'price'
-  meta: 'Dec 25 - Jan 01',     // Previously 'dateRange' or 'type'
-  location: 'Sydney CBD',
+  subtitle: 'Electric · Long Range',
+  price: 50,
   image: { uri: 'https://example.com/bike.jpg' },
-  status: 'Active',
-  isVerified: true
 };
 
-describe('Card Component', () => {
-  
-  // --- 1. Core Rendering Tests (BookingCard Logic) ---
+// ---------------- TEST SUITE ----------------
 
-  it('renders core information (Title, Subtitle, Meta, Location)', () => {
-    const { getByText } = render(<Card {...MOCK_CARD_DATA} />);
-    
+describe('Card Component', () => {
+  // ---------- CORE RENDERING ----------
+
+  it('1. Renders title, subtitle, and price', () => {
+    const { getByText } = render(<Card {...BASE_PROPS} />);
+
     expect(getByText('Tesla E-Bike')).toBeTruthy();
-    expect(getByText('$50/week')).toBeTruthy();
-    expect(getByText('Dec 25 - Jan 01')).toBeTruthy();
-    expect(getByText('Sydney CBD')).toBeTruthy();
+    expect(getByText('Electric · Long Range')).toBeTruthy();
+
+    // ✅ React Native–safe assertion for nested Text
+    expect(getByText(/50/)).toBeTruthy();
+    expect(getByText(/\/week/)).toBeTruthy();
   });
 
-  it('renders gracefully without an image', () => {
+  it('2. Renders gracefully without image', () => {
     const { getByTestId } = render(
-      <Card {...MOCK_CARD_DATA} image={null} testID="card" />
+      <Card {...BASE_PROPS} image={null} testID="card" />
     );
+
     expect(getByTestId('card')).toBeTruthy();
   });
 
-  // --- 2. Badge & Status Tests (BikeCard Logic) ---
+  // ---------- BADGE LOGIC ----------
 
-  it('renders the Status Pill correctly (e.g., Active, Upcoming)', () => {
-    const { getByText, rerender, queryByText } = render(
-      <Card {...MOCK_CARD_DATA} status="Active" />
+  it('3. Renders badge when badgeText is provided', () => {
+    const { getByText } = render(
+      <Card {...BASE_PROPS} badgeText="Active" />
     );
+
     expect(getByText('Active')).toBeTruthy();
-
-    // Should NOT render if status is missing
-    rerender(<Card {...MOCK_CARD_DATA} status={null} />);
-    expect(queryByText('Active')).toBeNull();
   });
 
-  it('renders the "Cheapest" badge (Specific Highlight Logic)', () => {
-    // Migration from BikeCard "highlight" logic
-    const { getByText } = render(<Card {...MOCK_CARD_DATA} status="Cheapest" />);
-    expect(getByText('Cheapest')).toBeTruthy();
+  it('4. Does not render badge when badgeText is missing', () => {
+    const { queryByText } = render(<Card {...BASE_PROPS} />);
+    expect(queryByText(/active/i)).toBeNull();
   });
 
-  it('renders VerifiedBadge only when isVerified is true', () => {
-    const { getByText, queryByText, rerender } = render(
-      <Card {...MOCK_CARD_DATA} isVerified={true} />
+  // ---------- OPTIONAL DATA ----------
+
+  it('5. Renders rating when provided', () => {
+    const { getByText } = render(
+      <Card {...BASE_PROPS} rating="4.8" />
     );
-    expect(getByText('VerifiedBadge')).toBeTruthy();
 
-    rerender(<Card {...MOCK_CARD_DATA} isVerified={false} />);
-    expect(queryByText('VerifiedBadge')).toBeNull();
+    expect(getByText('4.8')).toBeTruthy();
   });
 
-  // --- 3. Variant & Interaction Tests ---
+  it('6. Renders store name when provided', () => {
+    const { getByText } = render(
+      <Card {...BASE_PROPS} storeName="E-Bike Hub" />
+    );
 
-  it('adapts container style based on "variant" prop', () => {
-    // We strictly check that it renders with the ID, implementation details (width) 
-    // are handled by styles which we trust React Native to apply.
+    expect(getByText('E-Bike Hub')).toBeTruthy();
+  });
+
+  // ---------- VARIANTS ----------
+
+  it('7. Renders highlight variant layout', () => {
     const { getByTestId } = render(
-      <Card {...MOCK_CARD_DATA} variant="highlight" testID="highlight-card" />
+      <Card
+        {...BASE_PROPS}
+        variant="highlight"
+        testID="highlight-card"
+      />
     );
+
     expect(getByTestId('highlight-card')).toBeTruthy();
   });
 
-  it('calls onPress when tapped', () => {
-    const mockPress = jest.fn();
-    const { getByTestId } = render(
-      <Card {...MOCK_CARD_DATA} onPress={mockPress} testID="touchable-card" />
+  // ---------- INTERACTION ----------
+
+  it('8. Calls onBookPress when button is pressed', () => {
+    const onBookPress = jest.fn();
+
+    const { getByText } = render(
+      <Card
+        {...BASE_PROPS}
+        onBookPress={onBookPress}
+        buttonTitle="Book Ride"
+      />
     );
 
-    fireEvent.press(getByTestId('touchable-card'));
-    expect(mockPress).toHaveBeenCalledTimes(1);
+    fireEvent.press(getByText('Book Ride'));
+    expect(onBookPress).toHaveBeenCalledTimes(1);
   });
 });

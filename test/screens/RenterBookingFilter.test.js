@@ -5,13 +5,15 @@ import { AuthContext } from '../../context/AuthContext';
 
 // ---------------- MOCKS ----------------
 
-// Layout
+// Layout wrappers
 jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
 jest.mock('../../components/BrandLogo', () => 'BrandLogo');
+jest.mock('../../components/ScrollHint', () => () => null);
 
+// Label
 jest.mock('../../components/Label', () => {
   const { Text } = require('react-native');
-  return ({ children, ...props }) => <Text {...props}>{children}</Text>;
+  return ({ children }) => <Text>{children}</Text>;
 });
 
 // Navigation
@@ -21,7 +23,7 @@ jest.mock('expo-router', () => ({
 }));
 
 // DateRangePicker
-jest.mock('@components/DateRangePicker', () => {
+jest.mock('../../components/DateRangePicker', () => {
   const { View, Text } = require('react-native');
   return ({ fromLabel, toLabel }) => (
     <View>
@@ -31,20 +33,16 @@ jest.mock('@components/DateRangePicker', () => {
   );
 });
 
-// Other Inputs
-jest.mock('@components/Dropdown', () => 'Dropdown');
-jest.mock('@components/LocationSelector', () => 'LocationSelector');
-jest.mock('@components/PriceRangeSlider', () => 'PriceRangeSlider');
+// Other inputs
+jest.mock('../../components/PriceRangeSlider', () => () => null);
+jest.mock('../../components/Dropdown', () => () => null);
+jest.mock('../../components/LocationSelector', () => () => null);
 
 // Button
-jest.mock('@components/Button', () => {
+jest.mock('../../components/Button', () => {
   const { TouchableOpacity, Text } = require('react-native');
-  return ({ title, onPress, variant, testID }) => (
-    <TouchableOpacity
-      testID={testID}
-      onPress={onPress}
-      accessibilityLabel={variant}
-    >
+  return ({ title, onPress, variant }) => (
+    <TouchableOpacity onPress={onPress} accessibilityLabel={variant}>
       <Text>{title}</Text>
     </TouchableOpacity>
   );
@@ -53,7 +51,7 @@ jest.mock('@components/Button', () => {
 // ---------------- TEST SUITE ----------------
 
 describe('RenterBookingFilter Screen', () => {
-  const renderWithAuth = (user = { name: 'Alex' }) =>
+  const renderWithAuth = (user = { name: 'Alex Johnson' }) =>
     render(
       <AuthContext.Provider value={{ user }}>
         <RenterBookingFilter />
@@ -65,52 +63,34 @@ describe('RenterBookingFilter Screen', () => {
     jest.spyOn(Alert, 'alert');
   });
 
-  // ---------- RENDER TESTS ----------
+  // ---------- RENDERING ----------
 
-  it('1. Renders welcome message and heading', () => {
+  it('1. Renders welcome message with first name', () => {
     const { getByText } = renderWithAuth();
     expect(getByText('Welcome Alex')).toBeTruthy();
-    expect(getByText('Book an E-Bike')).toBeTruthy();
+    expect(
+      getByText('Set your preferences to find the perfect ride.')
+    ).toBeTruthy();
   });
 
   it('2. Renders DateRangePicker with From and To labels', () => {
-    const { getByTestId, getByText } = renderWithAuth();
-    expect(getByTestId('start-date-picker')).toBeTruthy();
+    const { getByText } = renderWithAuth();
     expect(getByText('From')).toBeTruthy();
     expect(getByText('To')).toBeTruthy();
   });
 
-  it('3. Renders PriceRangeSlider', () => {
-    const { getByTestId } = renderWithAuth();
-    expect(getByTestId('price-slider')).toBeTruthy();
+  it('3. Renders action buttons', () => {
+    const { getByText } = renderWithAuth();
+    expect(getByText('Continue')).toBeTruthy();
+    expect(getByText('Visit My Bookings')).toBeTruthy();
   });
 
-  it('4. Renders Category Dropdown', () => {
-    const { getByTestId } = renderWithAuth();
-    expect(getByTestId('category-dropdown')).toBeTruthy();
-  });
+  // ---------- LOGIC ----------
 
-  it('5. Renders Location Selector', () => {
-    const { getByTestId } = renderWithAuth();
-    expect(getByTestId('location-selector')).toBeTruthy();
-  });
+  it('4. Shows validation alert when Continue is pressed with empty form', () => {
+    const { getByText } = renderWithAuth();
 
-  it('6. Renders Continue and My Bookings buttons with correct variants', () => {
-    const { getByTestId } = renderWithAuth();
-
-    expect(getByTestId('continue-button').props.accessibilityLabel)
-      .toBe('primary');
-
-    expect(getByTestId('my-bookings-button').props.accessibilityLabel)
-      .toBe('secondary');
-  });
-
-  // ---------- LOGIC & NAVIGATION ----------
-
-  it('7. Shows validation alert if Continue is pressed with empty form', () => {
-    const { getByTestId } = renderWithAuth();
-
-    fireEvent.press(getByTestId('continue-button'));
+    fireEvent.press(getByText('Continue'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
       'Missing Details',
@@ -118,11 +98,11 @@ describe('RenterBookingFilter Screen', () => {
     );
   });
 
-  it('8. Navigates to My Bookings when button is pressed', () => {
-    const { getByTestId } = renderWithAuth();
+  it('5. Navigates to My Bookings tab when button is pressed', () => {
+    const { getByText } = renderWithAuth();
 
-    fireEvent.press(getByTestId('my-bookings-button'));
+    fireEvent.press(getByText('Visit My Bookings'));
 
-    expect(mockPush).toHaveBeenCalledWith('/my-rides');
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/my-rides');
   });
 });

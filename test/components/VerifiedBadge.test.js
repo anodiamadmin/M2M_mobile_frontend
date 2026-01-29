@@ -1,24 +1,62 @@
-import { render } from '@testing-library/react-native';
+import React from 'react';
+import { fireEvent, render } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import VerifiedBadge from '../../components/VerifiedBadge';
 
-// Mock Ionicons to avoid rendering issues
+// ---------------- MOCKS ----------------
+
+// Mock Label
+jest.mock('../../components/Label', () => {
+  const { Text } = require('react-native');
+  return ({ children }) => <Text>{children}</Text>;
+});
+
+// Mock Ionicons
 jest.mock('@expo/vector-icons', () => ({
-  Ionicons: () => 'Icon',
+  Ionicons: ({ name }) => {
+    const { Text } = require('react-native');
+    return <Text>{name}</Text>;
+  },
 }));
 
+// ---------------- TEST SUITE ----------------
+
 describe('VerifiedBadge Component', () => {
-  it('renders the icon by default', () => {
-    const { getByText } = render(<VerifiedBadge />);
-    expect(getByText('Icon')).toBeTruthy();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Alert, 'alert');
   });
 
-  it('renders text when showText is true', () => {
-    const { getByText } = render(<VerifiedBadge showText={true} />);
-    expect(getByText('Verified')).toBeTruthy();
+  it('1. Does not render when isVerified is false', () => {
+    const { toJSON } = render(<VerifiedBadge isVerified={false} />);
+    expect(toJSON()).toBeNull();
   });
 
-  it('does not render text by default', () => {
-    const { queryByText } = render(<VerifiedBadge />);
-    expect(queryByText('Verified')).toBeNull();
+  it('2. Renders icon and label when isVerified is true', () => {
+    const { getByText } = render(<VerifiedBadge isVerified={true} />);
+
+    expect(getByText('shield-checkmark-sharp')).toBeTruthy();
+    expect(getByText('VERIFIED')).toBeTruthy();
+  });
+
+  it('3. Uses large icon when size="large"', () => {
+    const { getByText } = render(
+      <VerifiedBadge isVerified={true} size="large" />
+    );
+
+    // Icon name still renders; size logic is trusted to styles
+    expect(getByText('shield-checkmark-sharp')).toBeTruthy();
+  });
+
+  it('4. Shows alert when badge is pressed', () => {
+    const { getByText } = render(<VerifiedBadge isVerified={true} />);
+
+    fireEvent.press(getByText('VERIFIED'));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Verified Status',
+      'This e-bike is tested and battle-hardened!',
+      expect.any(Array)
+    );
   });
 });

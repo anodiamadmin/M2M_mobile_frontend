@@ -74,7 +74,7 @@ export default function RenterBookingFilter() {
           {/* WELCOME SECTION */}
           <View style={styles.welcomeSection}>
             <Label variant="heading" secondary style={styles.welcome}>
-              Welcome {user?.name ? user.name.split(' ')[0] : "Sayan"}
+              Welcome {user?.name ? user.name.split(' ')[0] : "User"}
             </Label>
             <Label variant="body" secondary color={Colors.placeholderTextColor}>
               Set your preferences to find the perfect ride.

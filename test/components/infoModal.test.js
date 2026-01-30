@@ -10,13 +10,11 @@ jest.mock('../../components/Label', () => {
   return ({ children, ...props }) => <Text {...props}>{children}</Text>;
 });
 
-jest.mock('../../components/Button', () => {
-  const { TouchableOpacity, Text } = require('react-native');
-  return ({ title, onPress }) => (
-    <TouchableOpacity onPress={onPress}>
-      <Text>{title}</Text>
-    </TouchableOpacity>
-  );
+jest.mock('@expo/vector-icons', () => {
+  const { Text } = require('react-native');
+  return {
+    Ionicons: ({ name }) => <Text>{name}</Text>,
+  };
 });
 
 // ---------------- TEST SUITE ----------------
@@ -43,7 +41,7 @@ describe('InfoModal Component', () => {
     expect(getByText('Specific Modal Details')).toBeTruthy();
   });
 
-  it('3. Renders Close button and triggers onClose', () => {
+  it('3. Calls onClose when close icon is pressed', () => {
     const mockOnClose = jest.fn();
 
     const { getByText } = render(
@@ -52,7 +50,18 @@ describe('InfoModal Component', () => {
       </InfoModal>
     );
 
-    fireEvent.press(getByText('Close'));
+    // "close" comes from Ionicons name
+    fireEvent.press(getByText('close'));
     expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('4. Does not render when visible=false', () => {
+    const { queryByText } = render(
+      <InfoModal title="Hidden" visible={false}>
+        <Text>Hidden Content</Text>
+      </InfoModal>
+    );
+
+    expect(queryByText('Hidden')).toBeNull();
   });
 });

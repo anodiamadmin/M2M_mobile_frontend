@@ -13,7 +13,12 @@ const MOCK_BOOKINGS = [
     status: 'Active',
     startDate: '2026-02-01',
     endDate: '2026-02-07',
-    isVerified: true,
+    image: null,
+    rating: 4.8,
+    supplier: {
+      name: 'Bike Hub',
+      location: 'Sydney CBD',
+    },
   },
   {
     id: '2',
@@ -22,16 +27,22 @@ const MOCK_BOOKINGS = [
     status: 'Upcoming',
     startDate: '2026-03-01',
     endDate: '2026-03-05',
-    isVerified: false,
+    image: null,
+    rating: 4.5,
+    supplier: {
+      name: 'Cargo Rentals',
+      location: 'Sydney',
+    },
   },
 ];
 
 // ---------------- MOCKS ----------------
 
-// Layout
+// ScreenWrapper
 jest.mock('../../components/ScreenWrapper', () => ({ children }) => <>{children}</>);
+
+// BrandLogo
 jest.mock('../../components/BrandLogo', () => 'BrandLogo');
-jest.mock('../../components/ScrollHint', () => () => null);
 
 // Label
 jest.mock('../../components/Label', () => {
@@ -49,7 +60,7 @@ jest.mock('../../components/DateRangePicker', () => {
   );
 });
 
-// Card
+// Card (highlight)
 jest.mock('../../components/Card', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
   return ({ title, buttonTitle, onBookPress }) => (
@@ -67,7 +78,7 @@ jest.mock('../../components/Card', () => {
 // CardCarousel
 jest.mock('../../components/CardCarousel', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
-  return ({ data, actionLabel, onBookPress }) => (
+  return ({ data, onBookPress }) => (
     <View>
       {data.map(item => (
         <TouchableOpacity
@@ -75,7 +86,6 @@ jest.mock('../../components/CardCarousel', () => {
           onPress={() => onBookPress(item)}
         >
           <Text>{item.title}</Text>
-          <Text>{actionLabel}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -129,7 +139,7 @@ describe('RenterBookedBikesList Screen', () => {
     });
   });
 
-  it('2. Renders highlight booking and carousel bookings', async () => {
+  it('2. Renders active booking and booking history list', async () => {
     const { getByText } = renderWithAuth();
 
     await waitFor(() => {
@@ -160,16 +170,30 @@ describe('RenterBookedBikesList Screen', () => {
     );
   });
 
-  it('5. Navigates to booked ride details when booking is pressed', async () => {
+  it('5. Navigates to current booking when Manage Ride is pressed', async () => {
     const { getByText } = renderWithAuth();
 
     await waitFor(() => {
-      fireEvent.press(getByText('View Booking'));
+      fireEvent.press(getByText('Manage Ride'));
     });
 
     expect(mockPush).toHaveBeenCalledWith(
       expect.objectContaining({
-        pathname: '/(tabs)/my-rides/booked-ride-details',
+        pathname: '/(tabs)/my-rides/current-booking',
+      })
+    );
+  });
+
+  it('6. Navigates to current booking when a carousel item is pressed', async () => {
+    const { getByText } = renderWithAuth();
+
+    await waitFor(() => {
+      fireEvent.press(getByText('Bruna A1 Cargo'));
+    });
+
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/(tabs)/my-rides/current-booking',
       })
     );
   });

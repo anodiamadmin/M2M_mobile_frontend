@@ -1,3 +1,5 @@
+// This is not supposed to be a componenent, will be removed later in production
+
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Colors } from "../theme/colors";

@@ -1,3 +1,5 @@
+// Not ready for production, will be modified later
+
 import { StatusBar } from "expo-status-bar";
 import {
   Keyboard,

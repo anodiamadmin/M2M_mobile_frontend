@@ -1,3 +1,5 @@
+// Not ready for production, will be modified later
+
 import { useRouter } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
 import { useContext, useEffect, useState } from "react";

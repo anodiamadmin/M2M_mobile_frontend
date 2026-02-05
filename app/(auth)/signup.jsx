@@ -1,4 +1,4 @@
-// taking username here, might change approach later
+// taking username from backend here, might change approach later
 
 import { useRouter } from "expo-router";
 import * as SecureStore from 'expo-secure-store';

@@ -8,33 +8,54 @@ export default function Button({
   variant = "primary",
   style,
   textSize = 20,
-  disabled = false
+  disabled = false,
+  textColor, // 👈 1. Add the prop here
 }) {
   const isSecondary = variant === "secondary";
   const isHyperlink = variant === "hyperlink";
   
+  // Default values
   let backgroundColor = Colors.primary;
   let borderColor = Colors.transparent;
   let borderWidth = 0;
-  let textColor = Colors.white;
+  let finalTextColor = Colors.white; // Default for primary
 
+  // Variant Logic
   if (isSecondary) {
     backgroundColor = Colors.transparent;
     borderColor = Colors.primary;
     borderWidth = 2;
-    textColor = Colors.primary;
+    finalTextColor = Colors.primary;
   } else if (isHyperlink) {
     backgroundColor = Colors.transparent;
     borderColor = Colors.transparent;
     borderWidth = 0;
-    textColor = Colors.primary;
+    finalTextColor = Colors.primary;
   }
 
+  // 👈 2. Override: If user passed a textColor, use it!
+  if (textColor) {
+    finalTextColor = textColor;
+  }
+
+  // Disabled Logic (Always wins)
   if (disabled) {
     backgroundColor = isHyperlink ? Colors.transparent : Colors.border;
     borderColor = Colors.transparent;
-    textColor = Colors.tabInactive;
+    finalTextColor = Colors.tabInactive;
   }
+
+  const Content = (
+    <Label
+      bold
+      secondary
+      size={textSize}
+      color={finalTextColor} // 👈 3. Use the calculated color
+      style={isHyperlink ? { textDecorationLine: "underline" } : undefined}
+    >
+      {title}
+    </Label>
+  );
 
   if (isHyperlink) {
     return (
@@ -45,15 +66,7 @@ export default function Button({
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={style}
       >
-        <Label
-          bold
-          secondary
-          size={textSize}
-          color={textColor}
-          style={{ textDecorationLine: "underline" }}
-        >
-          {title}
-        </Label>
+        {Content}
       </TouchableOpacity>
     );
   }
@@ -65,22 +78,11 @@ export default function Button({
       activeOpacity={0.8}
       style={[
         styles.container,
-        {
-          backgroundColor,
-          borderColor,
-          borderWidth,
-        },
+        { backgroundColor, borderColor, borderWidth },
         style,
       ]}
     >
-      <Label
-        bold
-        secondary
-        size={textSize} 
-        color={textColor}
-      >
-        {title}
-      </Label>
+      {Content}
     </TouchableOpacity>
   );
 }

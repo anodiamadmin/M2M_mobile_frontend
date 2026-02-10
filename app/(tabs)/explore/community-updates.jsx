@@ -103,16 +103,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
 
+  /* ✅ Colors from Colors.js */
   purple: {
-    backgroundColor: "#E7D6F7",
+    backgroundColor: Colors.accent,
   },
 
   blue: {
-    backgroundColor: "#5EC6F3",
+    backgroundColor: Colors.activeBackground,
   },
 
   grey: {
-    backgroundColor: "#BDBDBD",
+    backgroundColor: Colors.surface,
   },
 
   /* ⬇️ navigation styles preserved */

@@ -100,8 +100,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
+  /* ✅ Color updated to use design system */
   card: {
-    backgroundColor: Colors.lightPurple || "#EEDCFA",
+    backgroundColor: Colors.accent,
     borderRadius: 16,
     padding: 16,
     gap: 6,

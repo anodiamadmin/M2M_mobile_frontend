@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Alert, Image, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import BrandLogo from "../../components/BrandLogo";
 import ImageUploader from "../../components/ImageUploader";
@@ -54,7 +54,6 @@ export default function Profile() {
             />
           )}
 
-          {/* Camera Button */}
           <View style={styles.cameraButton}>
             <ImageUploader
               icon="camera"
@@ -67,25 +66,18 @@ export default function Profile() {
 
       {/* USER INFO */}
       <View style={styles.infoSection}>
-
         <Label>
           <Label bold secondary={false} color={Colors.success}>
             Name:
           </Label>
-          <Label secondary>
-            {" "}{user?.name || "—"}
-          </Label>
+          <Label secondary>{" "}{user?.name || "—"}</Label>
         </Label>
 
         <Label>
           <Label bold secondary={false} color={Colors.success}>
             Email:
           </Label>
-          <Label
-            secondary
-            color={Colors.primary}
-            style={styles.underline}
-          >
+          <Label secondary color={Colors.primary} style={styles.underline}>
             {" "}{user?.email || "—"}
           </Label>
         </Label>
@@ -94,26 +86,35 @@ export default function Profile() {
           <Label bold secondary={false} color={Colors.success}>
             Bikes Rented:
           </Label>
-          <Label secondary>
-            {" "}{user?.bikesRented ?? 0}
-          </Label>
+          <Label secondary>{" "}{user?.bikesRented ?? 0}</Label>
         </Label>
 
         <Label>
           <Label bold secondary={false} color={Colors.success}>
             Joined micro2move on:
           </Label>
-          <Label secondary>
-            {" "}{joinedDate}
-          </Label>
+          <Label secondary>{" "}{joinedDate}</Label>
         </Label>
-
       </View>
 
       {/* LINKS */}
       <View style={styles.linksSection}>
-        <View style={styles.linkRow}>
-          <Ionicons name="people-outline" size={18} color={Colors.primary} />
+
+        {/* Community Activity */}
+        <TouchableOpacity
+          style={styles.linkRow}
+          activeOpacity={0.7}
+          onPress={() =>
+            Alert.alert("Coming Soon", "Community Activity is coming soon 🚀")
+          }
+        >
+          <Ionicons
+            name="people-outline"
+            size={18}
+            color={Colors.primary}
+            style={styles.icon}
+          />
+
           <Label
             size={18}
             bold
@@ -123,10 +124,23 @@ export default function Profile() {
           >
             Community Activity
           </Label>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.linkRow}>
-          <Ionicons name="school-outline" size={18} color={Colors.primary} />
+        {/* In-App Lessons */}
+        <TouchableOpacity
+          style={styles.linkRow}
+          activeOpacity={0.7}
+          onPress={() =>
+            Alert.alert("Coming Soon", "In-App Lessons are coming soon 📚")
+          }
+        >
+          <Ionicons
+            name="school-outline"
+            size={18}
+            color={Colors.primary}
+            style={styles.icon}
+          />
+
           <Label
             size={18}
             bold
@@ -136,24 +150,32 @@ export default function Profile() {
           >
             In-App Lessons
           </Label>
-        </View>
-      </View>
+        </TouchableOpacity>
 
-      {/* LOGOUT */}
-      <View style={styles.logoutSection}>
-        <View style={styles.linkRow}>
-          <Ionicons name="log-out-outline" size={18} color={Colors.red} />
+        {/* Logout (UNCHANGED) */}
+        <TouchableOpacity
+          style={styles.linkRow}
+          activeOpacity={0.7}
+          onPress={handleLogout}
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={18}
+            color={Colors.red}
+            style={styles.icon}
+          />
+
           <Label
             size={18}
             bold
             secondary
             color={Colors.red}
             style={styles.linkText}
-            onPress={handleLogout}
           >
             Logout
           </Label>
-        </View>
+        </TouchableOpacity>
+
       </View>
 
     </ScreenWrapper>
@@ -201,24 +223,24 @@ const styles = StyleSheet.create({
   },
 
   linksSection: {
-    marginTop: 20,
+    marginTop: 30,
     paddingHorizontal: 16,
-    gap: 12,
+    gap: 22,
   },
 
   linkRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 4,
+    height: 28,
+  },
+
+  icon: {
+    marginRight: 12,
+    marginTop: 1,
   },
 
   linkText: {
     textDecorationLine: "underline",
-  },
-
-  logoutSection: {
-    marginTop: 10,
-    paddingHorizontal: 16,
+    marginTop: -2,
   },
 });

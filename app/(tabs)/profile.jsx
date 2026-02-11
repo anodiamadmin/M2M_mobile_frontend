@@ -1,11 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
-import {
-  Image,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
 import BrandLogo from "../../components/BrandLogo";
 import ImageUploader from "../../components/ImageUploader";
@@ -36,12 +32,12 @@ export default function Profile() {
 
   return (
     <ScreenWrapper mode="scroll">
-      
+
       {/* HEADER */}
       <View style={styles.header}>
         <BrandLogo />
         <Label variant="heading" secondary={false}>
-          Welcome {user?.name?.split(" ")[0] || "Rider"}
+          Welcome {user?.name?.split(" ")[0] || "User"}
         </Label>
       </View>
 
@@ -53,18 +49,16 @@ export default function Profile() {
           ) : (
             <Ionicons
               name="person-circle-outline"
-              size={150}
+              size={140}
               color={Colors.placeholderTextColor}
             />
           )}
 
-          {/* Camera button (ImageUploader controls camera) */}
+          {/* Camera Button */}
           <View style={styles.cameraButton}>
             <ImageUploader
-              label=""
-              activeLabel=""
               icon="camera"
-              imageUri={null}
+              variant="avatar"
               onImageSelected={(uri) => setProfileImage(uri)}
             />
           </View>
@@ -121,7 +115,7 @@ export default function Profile() {
         <View style={styles.linkRow}>
           <Ionicons name="people-outline" size={18} color={Colors.primary} />
           <Label
-            size={16}
+            size={18}
             bold
             secondary
             color={Colors.primary}
@@ -134,7 +128,7 @@ export default function Profile() {
         <View style={styles.linkRow}>
           <Ionicons name="school-outline" size={18} color={Colors.primary} />
           <Label
-            size={16}
+            size={18}
             bold
             secondary
             color={Colors.primary}
@@ -150,7 +144,7 @@ export default function Profile() {
         <View style={styles.linkRow}>
           <Ionicons name="log-out-outline" size={18} color={Colors.red} />
           <Label
-            size={16}
+            size={18}
             bold
             secondary
             color={Colors.red}
@@ -191,23 +185,14 @@ const styles = StyleSheet.create({
     borderRadius: 70,
   },
 
-  cameraButton: { 
+  cameraButton: {
     position: "absolute",
-    bottom: 6, 
-    right: 6, 
-    width: 42, 
-    height: 42, 
-    borderRadius: 21, 
-    backgroundColor: Colors.primary, 
-    alignItems: "center", 
-    justifyContent: "center", 
-    elevation: 5,
-    
+    bottom: 0,
+    right: 0,
   },
 
-
   infoSection: {
-    paddingHorizontal: 16,  
+    paddingHorizontal: 16,
     gap: 10,
   },
 

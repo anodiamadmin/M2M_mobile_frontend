@@ -10,7 +10,8 @@ export default function ImageUploader({
   icon,
   imageUri,
   onImageSelected,
-  aspect = [1, 1] 
+  aspect = [1, 1],
+  variant = "default"   // ✅ NEW PROP (default safe)
 }) {
   
   const takePhoto = async () => {
@@ -47,28 +48,40 @@ export default function ImageUploader({
   };
 
   const displayText = imageUri ? (activeLabel || label) : label;
+  const isAvatar = variant === "avatar";
 
   return (
     <TouchableOpacity 
-      style={[styles.container, imageUri && styles.active]} 
+      style={[
+        styles.container,
+        imageUri && styles.active,
+        isAvatar && styles.avatarContainer   // ✅ only applied for profile
+      ]} 
       activeOpacity={0.7}
       onPress={takePhoto}
     >
-      {imageUri ? (
+      {imageUri && !isAvatar ? (
         <Image source={{ uri: imageUri }} style={styles.thumb} />
       ) : (
-        <Ionicons name={icon} size={20} color={Colors.primary} style={styles.icon} />
+        <Ionicons 
+          name={icon} 
+          size={isAvatar ? 18 : 20} 
+          color={isAvatar ? Colors.white : Colors.primary} 
+          style={!isAvatar && styles.icon} 
+        />
       )}
       
-      <Label 
-        size={11} 
-        secondary 
-        color={imageUri ? Colors.primary : "#555"} 
-        style={styles.label}
-        numberOfLines={1}
-      >
-        {imageUri ? `${displayText} ✓` : displayText}
-      </Label>
+      {!isAvatar && (
+        <Label 
+          size={11} 
+          secondary 
+          color={imageUri ? Colors.primary : "#555"} 
+          style={styles.label}
+          numberOfLines={1}
+        >
+          {imageUri ? `${displayText} ✓` : displayText}
+        </Label>
+      )}
     </TouchableOpacity>
   );
 }
@@ -87,17 +100,34 @@ const styles = StyleSheet.create({
     borderColor: Colors.border, 
     overflow: 'hidden',
   },
+
+  // ✅ ONLY used when variant="avatar"
+  avatarContainer: {
+    flex: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primary,
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   active: {
     backgroundColor: Colors.activeBackground, 
     borderColor: Colors.primary,
   },
+
   icon: {
     marginRight: 6,
   },
+
   label: {
     textAlign: 'center',
     flexShrink: 1,
   },
+
   thumb: {
     width: 24,
     height: 24,

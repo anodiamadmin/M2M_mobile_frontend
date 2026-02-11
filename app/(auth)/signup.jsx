@@ -1,5 +1,3 @@
-// taking username from backend here, might change approach later
-
 import { useRouter } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
 import { useContext, useState } from "react";
@@ -15,7 +13,7 @@ import Label from "../../components/Label";
 import PasswordInput from "../../components/PasswordInput";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import TextField from "../../components/TextField";
-import { AuthStatus } from "../../constants/types";
+// import { AuthStatus } from "../../constants/types"; // ❌ Not needed anymore
 import { AuthContext } from "../../context/AuthContext";
 import { useIntent } from "../../hooks/useIntent";
 import { authService } from "../../services/authService";
@@ -25,8 +23,8 @@ import { isAtLeast16, isValidEmail } from "../../utils/validators";
 export default function SignUp() {
   const router = useRouter();
   
-  // ✅ 1. Destructure 'setUser' from Context
-  const { setAuthStatus, setUser } = useContext(AuthContext);
+  // ✅ 1. Use 'login' instead of manually setting state
+  const { login } = useContext(AuthContext);
   
   const { resolveIntent } = useIntent(); 
   const [name, setName] = useState("");
@@ -40,6 +38,7 @@ export default function SignUp() {
   const [verifying, setVerifying] = useState(false);
 
   const handleSignUp = async () => {
+    // ... Validation Logic (kept same) ...
     if (!name || !email || !password || !dob) {
       Alert.alert("Missing Fields", "Please fill in all text details.");
       return;
@@ -87,20 +86,26 @@ export default function SignUp() {
   const performRegistration = async () => {
     try {
       const dobString = dob.toISOString().split('T')[0];
+      
+      // 1. API Register
       const response = await authService.register(name, email, password, dobString);
       
       if (response.access_token) {
+        // ⚠️ CRITICAL: Save token temporarily so 'getUserProfile' works
         await SecureStore.setItemAsync('user_token', response.access_token);
 
-        // ✅ 2. Fetch & Set User Profile Immediately
+        // 2. Fetch User Profile
+        let userProfile = null;
         try {
-            const userProfile = await authService.getUserProfile();
-            setUser(userProfile); // Update global state
+            userProfile = await authService.getUserProfile();
         } catch (profileError) {
             console.error("Profile fetch failed after signup:", profileError);
         }
 
-        setAuthStatus(AuthStatus.AUTHENTICATED);
+        // ✅ 3. Call Context Login (Handles State + Persistence)
+        await login(response.access_token, userProfile);
+
+        // 4. Navigate
         resolveIntent();
       }
     } catch (error) {
@@ -212,7 +217,7 @@ export default function SignUp() {
             title={getButtonTitle()} 
             variant="primary" 
             onPress={handleSignUp} 
-            disabled={loading}
+            disabled={loading || verifying}
           />
           <ActionRow 
             text="Already an user?"

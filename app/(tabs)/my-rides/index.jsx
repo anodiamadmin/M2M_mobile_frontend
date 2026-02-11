@@ -15,7 +15,6 @@ import { AuthContext } from "../../../context/AuthContext";
 import { bikeService } from "../../../services/bikeService";
 import { Colors } from "../../../theme/colors";
 
-// ✅ Helper to format date as DD-MM-YYYY
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -87,7 +86,6 @@ export default function RenterBookedBikesList() {
     let badge = booking.condition || booking.status || "";
     if (badge === "Available") badge = "Available Now";
     
-    // ✅ Calculate formatted dates
     const start = formatDate(booking.startDate);
     const end = formatDate(booking.endDate);
 
@@ -101,7 +99,6 @@ export default function RenterBookedBikesList() {
       badgeText: badge.toUpperCase(),
       storeName: booking.supplier?.name,
       isVerified: booking.isVerified,
-      // ✅ Pass Location & Date Range
       location: booking.supplier?.location || "Sydney, AU",
       dateRange: `${start} to ${end}`,
       originalData: booking 
@@ -119,96 +116,9 @@ export default function RenterBookedBikesList() {
   }, [filteredBookings, activeRide, formatBookingForCard]);
 
 
-  // --- RENDER HELPERS ---
-
-  const renderEmptyState = () => (
-    <View style={styles.zeroStateContainer}>
-      <View style={styles.zeroStateIconCircle}>
-        <Ionicons name="bicycle" size={60} color={Colors.primary} />
-      </View>
-      <Label variant="heading" style={styles.zeroStateTitle}>No Rides Yet</Label>
-      <Label variant="body" style={styles.zeroStateText}>
-        You haven't booked any e-bikes. Start your journey by finding the perfect ride near you.
-      </Label>
-      <Button
-        title="Find an E-Bike"
-        variant="primary"
-        onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
-        style={styles.zeroStateButton}
-      />
-    </View>
-  );
-
-  const renderDashboard = () => (
-    <View>
-      {/* HIGHLIGHT SECTION */}
-      {activeRide && (
-          <View style={styles.highlightSection}>
-              <Card
-                  {...activeRide}
-                  variant="highlight"
-                  buttonTitle="Manage Ride"
-                  onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
-              />
-          </View>
-      )}
-
-      {/* LIST SECTION */}
-      <View style={styles.listSection}>
-          <View style={styles.sectionHeader}>
-              <Label variant="subheading" style={{ marginBottom: 4 }}>Your Booking History</Label>
-              {(fromDate || toDate) && (
-                  <Button 
-                      title="Clear Filter"
-                      variant="hyperlink"
-                      textSize={14}
-                      onPress={() => { setFromDate(null); setToDate(null); }}
-                      style={{ padding: 0 }} 
-                  />
-              )}
-          </View>
-
-          <View style={styles.filterRow}>
-            <View style={styles.column}>
-              <DateRangePicker
-                fromDate={fromDate}
-                toDate={toDate}
-                onFromChange={setFromDate}
-                onToChange={setToDate}
-              />
-            </View>
-          </View>
-
-          {carouselData.length > 0 ? (
-              <CardCarousel
-                data={carouselData}
-                actionLabel="View Booking"
-                onBookPress={(item) => handleBookingPress(item.originalData || item)}
-                flatListProps={{
-                    initialNumToRender: 2,
-                    maxToRenderPerBatch: 2,
-                    windowSize: 3,
-                    removeClippedSubviews: true,
-                }}
-              />
-          ) : (
-              <View style={styles.filterEmptyState}>
-                <Label style={styles.emptyText}>No bookings found for these dates.</Label>
-              </View>
-          )}
-      </View>
-      
-      <Button
-        title="Book a New E-Bike"
-        variant="primary"
-        onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
-        style={styles.actionButton}
-      />
-      <View style={{ height: 40 }} />
-    </View>
-  );
-
   // --- MAIN RENDER ---
+  const firstName = user?.name ? user.name.split(' ')[0] : "Rider";
+
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={styles.mainContainer}>
@@ -230,10 +140,95 @@ export default function RenterBookedBikesList() {
                 scrollEventThrottle={16}
              >
                   <Label variant="heading" style={styles.welcome}>
-                    Welcome {user?.name ? user.name.split(' ')[0] : "Rider"}
+                    Welcome {firstName}
                   </Label>
 
-                  {allBookings.length === 0 ? renderEmptyState() : renderDashboard()}
+                  {/* EMPTY STATE */}
+                  {allBookings.length === 0 ? (
+                    <View style={styles.zeroStateContainer}>
+                      <View style={styles.zeroStateIconCircle}>
+                        <Ionicons name="bicycle" size={60} color={Colors.primary} />
+                      </View>
+                      <Label variant="heading" style={styles.zeroStateTitle}>No Rides Yet</Label>
+                      <Label variant="body" style={styles.zeroStateText}>
+                        You haven't booked any e-bikes. Start your journey by finding the perfect ride near you.
+                      </Label>
+                      <Button
+                        title="Find an E-Bike"
+                        variant="primary"
+                        onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
+                        style={styles.zeroStateButton}
+                      />
+                    </View>
+                  ) : (
+                    // DASHBOARD STATE
+                    <View>
+                        {/* HIGHLIGHT SECTION (Active Ride) */}
+                        {activeRide && (
+                            <View style={styles.highlightSection}>
+                                <Card
+                                    {...activeRide}
+                                    variant="highlight"
+                                    buttonTitle="Manage Ride"
+                                    onBookPress={() => handleBookingPress(activeRide.originalData || activeRide)}
+                                />
+                            </View>
+                        )}
+
+                        {/* LIST SECTION (History) */}
+                        <View style={styles.listSection}>
+                            <View style={styles.sectionHeader}>
+                                <Label variant="subheading" style={{ marginBottom: 4 }}>Your Booking History</Label>
+                                {(fromDate || toDate) && (
+                                    <Button 
+                                        title="Clear Filter"
+                                        variant="hyperlink"
+                                        textSize={14}
+                                        onPress={() => { setFromDate(null); setToDate(null); }}
+                                        style={{ padding: 0 }} 
+                                    />
+                                )}
+                            </View>
+
+                            <View style={styles.filterRow}>
+                                <View style={styles.column}>
+                                    <DateRangePicker
+                                        fromDate={fromDate}
+                                        toDate={toDate}
+                                        onFromChange={setFromDate}
+                                        onToChange={setToDate}
+                                    />
+                                </View>
+                            </View>
+
+                            {carouselData.length > 0 ? (
+                                <CardCarousel
+                                    data={carouselData}
+                                    actionLabel="View Booking"
+                                    onBookPress={(item) => handleBookingPress(item.originalData || item)}
+                                    flatListProps={{
+                                        initialNumToRender: 2,
+                                        maxToRenderPerBatch: 2,
+                                        windowSize: 3,
+                                        removeClippedSubviews: true,
+                                    }}
+                                />
+                            ) : (
+                                <View style={styles.filterEmptyState}>
+                                    <Label style={styles.emptyText}>No bookings found for these dates.</Label>
+                                </View>
+                            )}
+                        </View>
+                        
+                        <Button
+                            title="Book a New E-Bike"
+                            variant="primary"
+                            onPress={() => router.push("/(tabs)/my-rides/booking-filter")}
+                            style={styles.actionButton}
+                        />
+                        <View style={{ height: 40 }} />
+                    </View>
+                  )}
              </ScrollView>
         )}
       </View>
@@ -248,7 +243,6 @@ const styles = StyleSheet.create({
   centerLoading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   welcome: { marginTop: 8, marginBottom: 20, color: Colors.black },
   
-  // Zero State Styles
   zeroStateContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 60 },
   zeroStateIconCircle: { 
       width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.surface, 
@@ -258,7 +252,6 @@ const styles = StyleSheet.create({
   zeroStateText: { textAlign: 'center', color: Colors.placeholderTextColor, paddingHorizontal: 40, marginBottom: 30, lineHeight: 22 },
   zeroStateButton: { width: '80%' },
 
-  // Dashboard Styles
   highlightSection: { marginBottom: 24 },
   listSection: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },

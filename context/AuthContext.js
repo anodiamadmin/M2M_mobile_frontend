@@ -1,20 +1,19 @@
-// Database Tables to be updated to expose the joining date and the number of bikes rented by the user:
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { AuthStatus } from "../constants/types";
 import { authService } from "../services/authService";
 
 export const AuthContext = createContext({
   authStatus: AuthStatus.UNKNOWN,
-  user: null, // ✅ Add user to the default context
-  setAuthStatus: () => {},
-  logout: async () => {}, 
+  user: null,
+  login: async (token, userData) => {}, // ✅ Added central login handler
+  logout: async () => {},
 });
 
-// ✅ Normalize backend user to frontend shape 
+// ✅ Normalize backend user to frontend shape
 const normalizeUser = (rawUser) => {
   if (!rawUser) return null;
-
   return {
     id: rawUser.id || rawUser._id || null,
     name: rawUser.name || rawUser.fullName || "",
@@ -31,60 +30,99 @@ const normalizeUser = (rawUser) => {
 
 export function AuthProvider({ children }) {
   const [authStatus, setAuthStatus] = useState(AuthStatus.UNKNOWN);
-  const [user, setUser] = useState(null); // ✅ Add User State
+  const [user, setUser] = useState(null);
 
+  // 🚀 APP LAUNCH: Load Data Immediately
   useEffect(() => {
-    const checkLoginStatus = async () => {
+    const hydrateAuth = async () => {
       try {
-        const token = await SecureStore.getItemAsync('user_token');
-        
+        // 1. Load Token (Secure) & User Data (AsyncStorage) in parallel
+        const [token, storedUser] = await Promise.all([
+          SecureStore.getItemAsync('user_token'),
+          AsyncStorage.getItem('user_data')
+        ]);
+
         if (token) {
-          // ✅ 1. Token found, set status
+          // ✅ A. INSTANT UI UPDATE (Offline Support)
           setAuthStatus(AuthStatus.AUTHENTICATED);
           
-          // ✅ 2. Fetch User Details immediately
-          // (Assuming authService has a method to get the current user profile)
-          try {
-             // You need to implement getUserProfile in your authService if it doesn't exist
-             // It should normally call your backend endpoint: GET /users/me
-             const userData = await authService.getUserProfile();
-             const normalizedUser = normalizeUser(userData);
-             setUser(normalizedUser);
-          } catch (err) {
-             console.error("Failed to fetch user profile", err);
-             // Optional: If fetching profile fails, maybe logout?
+          if (storedUser) {
+             setUser(JSON.parse(storedUser));
           }
+
+          // ✅ B. SILENT BACKGROUND REFRESH (Online Sync)
+          // We don't await this, so it doesn't block the UI
+          refreshUserProfile(); 
 
         } else {
           setAuthStatus(AuthStatus.UNAUTHENTICATED);
           setUser(null);
         }
       } catch (e) {
-        console.error("Auth check failed:", e);
+        console.error("Hydration failed:", e);
         setAuthStatus(AuthStatus.UNAUTHENTICATED);
-        setUser(null);
       }
     };
 
-    checkLoginStatus();
+    hydrateAuth();
   }, []);
 
+  // Helper: Fetch latest data from backend and update storage
+  const refreshUserProfile = async () => {
+    try {
+      const latestUser = await authService.getUserProfile();
+      if (latestUser) {
+        const normalized = normalizeUser(latestUser);
+        setUser(normalized); // Update State
+        await AsyncStorage.setItem('user_data', JSON.stringify(normalized)); // Update Disk
+      }
+    } catch (err) {
+      console.log("Background profile refresh failed (User likely offline). Using cached data.");
+      // ⚠️ Do NOT logout here. The user is still authenticated, just offline.
+    }
+  };
+
+  // 🚀 LOGIN HANDLER: Call this from your LoginScreen
+  const login = async (token, userData) => {
+    try {
+      const normalizedUser = normalizeUser(userData);
+
+      // 1. Update State Immediately
+      setAuthStatus(AuthStatus.AUTHENTICATED);
+      setUser(normalizedUser);
+
+      // 2. Persist Data
+      await SecureStore.setItemAsync('user_token', token);
+      await AsyncStorage.setItem('user_data', JSON.stringify(normalizedUser));
+    } catch (error) {
+      console.error("Login persistence failed:", error);
+    }
+  };
+
+  // 🚀 LOGOUT HANDLER
   const logout = async () => {
     try {
-      if (authService.logout) await authService.logout();
+      // 1. Try backend logout (fire and forget)
+      try {
+        if (authService.logout) await authService.logout();
+      } catch (e) {
+        console.log("Backend logout ignored (User likely offline):", e);
+      }
+
+      // 2. Clear Local Storage
+      await SecureStore.deleteItemAsync('user_token');
+      await AsyncStorage.removeItem('user_data');
+
+      // 3. Reset State
+      setAuthStatus(AuthStatus.UNAUTHENTICATED);
+      setUser(null);
     } catch (e) {
-      console.log("Backend logout ignored:", e);
+      console.error("Logout failed:", e);
     }
-
-    await SecureStore.deleteItemAsync('user_token');
-
-    setAuthStatus(AuthStatus.UNAUTHENTICATED);
-    setUser(null); // ✅ Clear user on logout
   };
 
   return (
-    // ✅ Pass 'user' and 'setUser' to the app
-    <AuthContext.Provider value={{ authStatus, setAuthStatus, user, setUser, logout }}>
+    <AuthContext.Provider value={{ authStatus, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

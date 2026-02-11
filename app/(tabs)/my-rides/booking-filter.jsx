@@ -6,7 +6,7 @@ import BrandLogo from "../../../components/BrandLogo";
 import Button from "../../../components/Button";
 import Label from "../../../components/Label";
 import ScreenWrapper from "../../../components/ScreenWrapper";
-import ScrollHint from "../../../components/ScrollHint"; // ✅ In case of small screens
+import ScrollHint from "../../../components/ScrollHint";
 
 import DateRangePicker from "../../../components/DateRangePicker";
 import Dropdown from "../../../components/Dropdown";
@@ -55,12 +55,12 @@ export default function RenterBookingFilter() {
     }
   };
 
+  // ✅ Safety: Handle null user
+  const firstName = user?.name ? user.name.split(' ')[0] : "Rider";
+
   return (
-    // ✅ Apply edges override to fit perfectly with the Tab Bar
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <View style={{ flex: 1 }}>
-        
-        {/* FIXED HEADER */}
         <View style={styles.headerContainer}>
           <BrandLogo />
         </View>
@@ -71,17 +71,15 @@ export default function RenterBookingFilter() {
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
-          {/* WELCOME SECTION */}
           <View style={styles.welcomeSection}>
             <Label variant="heading" secondary style={styles.welcome}>
-              Welcome {user?.name ? user.name.split(' ')[0] : "User"}
+              Welcome {firstName}
             </Label>
             <Label variant="body" secondary color={Colors.placeholderTextColor}>
               Set your preferences to find the perfect ride.
             </Label>
           </View>
 
-          {/* FILTERS */}
           <View style={styles.filterSection}>
             <DateRangePicker
               fromLabel="From"
@@ -110,7 +108,6 @@ export default function RenterBookingFilter() {
             />
           </View>
 
-          {/* ACTION BUTTONS */}
           <View style={styles.actionButtons}>
             <Button
               title="Continue"
@@ -126,7 +123,6 @@ export default function RenterBookingFilter() {
           </View>
         </ScrollView>
 
-        {/* ✅ Hint only shows if the device screen is small enough to require scrolling */}
         <ScrollHint visible={!hasScrolled} />
       </View>
     </ScreenWrapper>
@@ -134,27 +130,10 @@ export default function RenterBookingFilter() {
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 5,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  welcomeSection: {
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  welcome: {
-    marginBottom: 4,
-  },
-  filterSection: {
-    gap: 20,
-  },
-  actionButtons: {
-    marginTop: 30,
-    gap: 12,
-  }
+  headerContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 5 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
+  welcomeSection: { marginTop: 10, marginBottom: 20 },
+  welcome: { marginBottom: 4 },
+  filterSection: { gap: 20 },
+  actionButtons: { marginTop: 30, gap: 12 }
 });

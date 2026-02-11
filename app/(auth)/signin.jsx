@@ -11,7 +11,7 @@ import EmailInput from "../../components/EmailInput";
 import Label from "../../components/Label";
 import PasswordInput from "../../components/PasswordInput";
 import ScreenWrapper from "../../components/ScreenWrapper";
-import { AuthStatus } from "../../constants/types";
+// import { AuthStatus } from "../../constants/types"; // ❌ No longer needed here
 import { AuthContext } from "../../context/AuthContext";
 import { useIntent } from "../../hooks/useIntent";
 import { authService } from "../../services/authService";
@@ -19,8 +19,8 @@ import { authService } from "../../services/authService";
 export default function SignIn() {
   const router = useRouter();
   
-  // ✅ 1. Get 'setUser' from context
-  const { setAuthStatus, setUser } = useContext(AuthContext);
+  // ✅ 1. Use the new 'login' function from context
+  const { login } = useContext(AuthContext);
   
   const { resolveIntent } = useIntent();
   const [email, setEmail] = useState("");
@@ -34,27 +34,34 @@ export default function SignIn() {
     }
     setLoading(true);
     try {
-      // 1. Perform Login
+      // 1. Perform API Login
       const response = await authService.login(email, password);
       
       if (response.access_token) {
-        // (Redundant but safe: ensure token is saved before profile fetch)
+        // ⚠️ CRITICAL STEP:
+        // We must save the token manually here first so that 'getUserProfile' 
+        // has a valid token to use for its request.
         await SecureStore.setItemAsync('user_token', response.access_token);
         
-        // ✅ 2. Fetch User Profile immediately using the new token
+        // 2. Fetch User Profile (Now that we have a token)
+        let userProfile = null;
         try {
-          const userProfile = await authService.getUserProfile();
-          setUser(userProfile); // Update Context State
+           userProfile = await authService.getUserProfile();
         } catch (profileError) {
-          console.error("Profile fetch failed:", profileError);
-          // We don't block login here, but user data might be empty until reload
+           console.error("Profile fetch failed, logging in with partial data:", profileError);
+           // Fallback: We log them in even if profile fails, 
+           // though the 'User' object will be empty until next refresh.
         }
 
-        // 3. Update Auth Status & Redirect
-        setAuthStatus(AuthStatus.AUTHENTICATED);
+        // ✅ 3. Call Context Login
+        // This handles: Updating AuthState, Setting User State, and Persisting Data for Offline use
+        await login(response.access_token, userProfile);
+
+        // 4. Navigate
         resolveIntent();
       }
     } catch (error) {
+      console.log(error);
       const errorMessage = error.response?.data?.detail || "Invalid email or password";
       Alert.alert("Login Failed", errorMessage);
     } finally {

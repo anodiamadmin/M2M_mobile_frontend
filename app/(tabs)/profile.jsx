@@ -41,7 +41,7 @@ export default function Profile() {
       <View style={styles.header}>
         <BrandLogo />
         <Label variant="heading" secondary={false}>
-          Welcome {user?.name?.split(" ")[0] || "User"}
+          Welcome {user?.name?.split(" ")[0] || "Rider"}
         </Label>
       </View>
 

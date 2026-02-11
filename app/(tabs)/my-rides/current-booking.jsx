@@ -212,7 +212,7 @@ export default function CurrentBooking() {
                 </View>
                 <View style={styles.detailRow}>
                     <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
-                    <Button title="Insurance details" variant="hyperlink" onPress={() => setInsuranceVisible(true)} style={styles.hyperlinkButton} textSize={15} />
+                    <Button title="Insurance details" variant="hyperlink" onPress={() => setInsuranceVisible(true)} style={styles.hyperlinkButton} textSize={16} />
                 </View>
             </View>
 
